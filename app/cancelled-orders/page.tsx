@@ -10,19 +10,20 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { 
-  Search, 
-  Eye, 
+import {
+  Search,
+  Eye,
   Clock,
   CheckCircle2,
   AlertTriangle,
   RefreshCw,
   Calendar,
-  DollarSign,
+  IndianRupee,
   User,
   ShoppingCart,
   Loader2,
-  AlertCircle
+  AlertCircle,
+  CreditCard
 } from 'lucide-react';
 
 interface CancelledOrder {
@@ -43,67 +44,67 @@ interface CancelledOrder {
 }
 
 // Mock data
-const mockCancelledOrders: CancelledOrder[] = [
-  {
-    id: '1',
-    orderId: 'ORD-2024-001',
-    customerName: 'John Smith',
-    customerEmail: 'john.smith@email.com',
-    serviceName: 'Website Development',
-    orderAmount: 1500,
-    refundAmount: 1425,
-    orderDate: '2024-01-10',
-    cancellationDate: '2024-01-15',
-    reason: 'Customer requested cancellation due to budget constraints',
-    status: 'initiated',
-    paymentReference: 'PAY123456789'
-  },
-  {
-    id: '2',
-    orderId: 'ORD-2024-002',
-    customerName: 'Sarah Johnson',
-    customerEmail: 'sarah.j@email.com',
-    serviceName: 'Digital Marketing Campaign',
-    orderAmount: 800,
-    refundAmount: 760,
-    orderDate: '2024-01-08',
-    cancellationDate: '2024-01-12',
-    reason: 'Service provider unavailable for the requested timeline',
-    status: 'in-progress',
-    paymentReference: 'PAY987654321',
-    refundDate: '2024-01-16'
-  },
-  {
-    id: '3',
-    orderId: 'ORD-2024-003',
-    customerName: 'Michael Chen',
-    customerEmail: 'michael.chen@email.com',
-    serviceName: 'Logo Design',
-    orderAmount: 300,
-    refundAmount: 300,
-    orderDate: '2024-01-05',
-    cancellationDate: '2024-01-07',
-    reason: 'Duplicate order placed by mistake',
-    status: 'completed',
-    paymentReference: 'PAY456789123',
-    refundDate: '2024-01-10',
-    refundReference: 'REF789123456'
-  },
-  {
-    id: '4',
-    orderId: 'ORD-2024-004',
-    customerName: 'Emily Davis',
-    customerEmail: 'emily.davis@email.com',
-    serviceName: 'Content Writing',
-    orderAmount: 250,
-    refundAmount: 225,
-    orderDate: '2024-01-12',
-    cancellationDate: '2024-01-14',
-    reason: 'Quality concerns with initial deliverables',
-    status: 'initiated',
-    paymentReference: 'PAY321654987'
-  }
-];
+// const mockCancelledOrders: CancelledOrder[] = [
+//   {
+//     id: '1',
+//     orderId: 'ORD-2024-001',
+//     customerName: 'John Smith',
+//     customerEmail: 'john.smith@email.com',
+//     serviceName: 'Website Development',
+//     orderAmount: 1500,
+//     refundAmount: 1425,
+//     orderDate: '2024-01-10',
+//     cancellationDate: '2024-01-15',
+//     reason: 'Customer requested cancellation due to budget constraints',
+//     status: 'initiated',
+//     paymentReference: 'PAY123456789'
+//   },
+//   {
+//     id: '2',
+//     orderId: 'ORD-2024-002',
+//     customerName: 'Sarah Johnson',
+//     customerEmail: 'sarah.j@email.com',
+//     serviceName: 'Digital Marketing Campaign',
+//     orderAmount: 800,
+//     refundAmount: 760,
+//     orderDate: '2024-01-08',
+//     cancellationDate: '2024-01-12',
+//     reason: 'Service provider unavailable for the requested timeline',
+//     status: 'in-progress',
+//     paymentReference: 'PAY987654321',
+//     refundDate: '2024-01-16'
+//   },
+//   {
+//     id: '3',
+//     orderId: 'ORD-2024-003',
+//     customerName: 'Michael Chen',
+//     customerEmail: 'michael.chen@email.com',
+//     serviceName: 'Logo Design',
+//     orderAmount: 300,
+//     refundAmount: 300,
+//     orderDate: '2024-01-05',
+//     cancellationDate: '2024-01-07',
+//     reason: 'Duplicate order placed by mistake',
+//     status: 'completed',
+//     paymentReference: 'PAY456789123',
+//     refundDate: '2024-01-10',
+//     refundReference: 'REF789123456'
+//   },
+//   {
+//     id: '4',
+//     orderId: 'ORD-2024-004',
+//     customerName: 'Emily Davis',
+//     customerEmail: 'emily.davis@email.com',
+//     serviceName: 'Content Writing',
+//     orderAmount: 250,
+//     refundAmount: 225,
+//     orderDate: '2024-01-12',
+//     cancellationDate: '2024-01-14',
+//     reason: 'Quality concerns with initial deliverables',
+//     status: 'initiated',
+//     paymentReference: 'PAY321654987'
+//   }
+// ];
 
 export default function CancelledOrdersPage() {
   const [orders, setOrders] = useState<CancelledOrder[]>([]);
@@ -114,15 +115,51 @@ export default function CancelledOrdersPage() {
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [actionResult, setActionResult] = useState<{ type: 'success' | 'error', message: string } | null>(null);
+  const [paymentReference, setPaymentReference] = useState('');
+  const [paymentReferenceError, setPaymentReferenceError] = useState('');
+
+  const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
 
   useEffect(() => {
     const fetchOrders = async () => {
-      setIsLoading(true);
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      setOrders(mockCancelledOrders);
-      setFilteredOrders(mockCancelledOrders);
-      setIsLoading(false);
+
+
+      try {
+        setIsLoading(true);
+
+        const token = localStorage.getItem('adminToken');
+        if (!token) {
+          console.warn('No admin token found');
+          return;
+        }
+
+        const response = await fetch(`${baseUrl}/api/admin/orders/cancelled`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          }
+        });
+
+        const data = await response.json();
+
+        if (response.ok && data.success && Array.isArray(data.data)) {
+          setOrders(data.data);
+          setFilteredOrders(data.data);
+        } else {
+          console.error('Failed to fetch orders:', data.message || 'Unknown error');
+          setOrders([]);
+          setFilteredOrders([]);
+        }
+      } catch (error) {
+        console.error('Error fetching orders:', error);
+        setOrders([]);
+        setFilteredOrders([]);
+      } finally {
+        setIsLoading(false);
+      }
     };
+
 
     fetchOrders();
   }, []);
@@ -146,23 +183,65 @@ export default function CancelledOrdersPage() {
     setFilteredOrders(filtered);
   }, [searchTerm, statusFilter, orders]);
 
+
+  // Reset payment reference when modal opens/closes
+  useEffect(() => {
+    if (selectedOrder) {
+      setPaymentReference('');
+      setPaymentReferenceError('');
+    }
+  }, [selectedOrder]);
+
   const handleProcessRefund = async (orderId: string) => {
+    // Validate payment reference for in-progress orders
+    if (selectedOrder?.status === 'in-progress' && !paymentReference.trim()) {
+      setPaymentReferenceError('Payment reference is required to complete the refund');
+      return;
+    }
+
     setActionLoading(orderId);
     setActionResult(null);
+    setPaymentReferenceError('');
 
     try {
-      // Simulate API call for processing refund
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
+      const token = localStorage.getItem('adminToken');
+      if (!token) throw new Error('Admin token missing');
+
       const currentDate = new Date().toISOString().split('T')[0];
-      const refundRef = `REF${Date.now()}`;
-      
-      setOrders(prev => 
+      const refundRef = paymentReference.trim() || "";
+
+      const selected = orders.find(order => order.id === orderId);
+      if (!selected) throw new Error('Order not found');
+
+      // Determine refund status
+
+      const dbrefundstatus = selected.status === 'initiated' ? '1' : '2'; // Assuming 2 = approved, 0 = rejected
+      const res = await fetch(`${baseUrl}/api/admin/orders/cancelled/update`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          bookingid: selected.orderId,
+          refundstatus: dbrefundstatus,
+          refundpaymentref: refundRef
+        })
+      });
+
+      const resData = await res.json();
+      if (!res.ok || !resData.success) {
+        throw new Error(resData.message || 'Refund API call failed');
+      }
+
+      // Update local state to reflect the changes
+      setOrders(prev =>
         prev.map(order => {
           if (order.id === orderId) {
+
             let newStatus: 'initiated' | 'in-progress' | 'completed' = 'in-progress';
             let updates: Partial<CancelledOrder> = { status: newStatus };
-            
+
             if (order.status === 'initiated') {
               updates.refundDate = currentDate;
             } else if (order.status === 'in-progress') {
@@ -170,12 +249,12 @@ export default function CancelledOrdersPage() {
               updates.status = newStatus;
               updates.refundReference = refundRef;
             }
-            
             return { ...order, ...updates };
           }
           return order;
         })
       );
+
 
       setActionResult({
         type: 'success',
@@ -183,16 +262,16 @@ export default function CancelledOrdersPage() {
       });
 
       setSelectedOrder(null);
-    } catch (error) {
+    } catch (error: any) {
+      console.error('Refund Error:', error);
       setActionResult({
         type: 'error',
-        message: 'Failed to process refund. Please try again.'
+        message: error.message || 'Failed to process refund.'
       });
     } finally {
       setActionLoading(null);
     }
   };
-
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'completed':
@@ -319,8 +398,8 @@ export default function CancelledOrdersPage() {
                             Cancelled: {new Date(order.cancellationDate).toLocaleDateString()}
                           </p>
                           <p className="text-sm font-medium text-green-600">
-                            <DollarSign className="w-3 h-3 inline mr-1" />
-                            Refund: ${order.refundAmount}
+                            <IndianRupee className="w-3 h-3 inline mr-1" />
+                            Refund: ₹{order.refundAmount}
                           </p>
                         </div>
                       </div>
@@ -361,7 +440,7 @@ export default function CancelledOrdersPage() {
                   Review order information and process refund
                 </DialogDescription>
               </DialogHeader>
-              
+
               {selectedOrder && (
                 <div className="space-y-6 max-h-[70vh] overflow-y-auto">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -413,11 +492,11 @@ export default function CancelledOrdersPage() {
                       <div className="space-y-2 text-sm">
                         <div className="flex justify-between">
                           <span className="text-gray-500">Order Amount:</span>
-                          <span className="font-medium">${selectedOrder.orderAmount}</span>
+                          <span className="font-medium">₹{selectedOrder.orderAmount}</span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-gray-500">Refund Amount:</span>
-                          <span className="font-medium text-green-600">${selectedOrder.refundAmount}</span>
+                          <span className="font-medium text-green-600">₹{selectedOrder.refundAmount}</span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-gray-500">Payment Ref:</span>
@@ -452,19 +531,57 @@ export default function CancelledOrdersPage() {
                   </div>
 
                   {selectedOrder.status !== 'completed' && (
-                    <div className="flex justify-end pt-4 border-t">
-                      <Button
-                        onClick={() => handleProcessRefund(selectedOrder.id)}
-                        disabled={!!actionLoading}
-                        className="bg-blue-600 hover:bg-blue-700 text-white"
-                      >
-                        {actionLoading === selectedOrder.id ? (
-                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                        ) : (
-                          <CheckCircle2 className="w-4 h-4 mr-2" />
-                        )}
-                        {selectedOrder.status === 'initiated' ? 'Process Refund' : 'Complete Refund'}
-                      </Button>
+                    <div className="space-y-4">
+                      {selectedOrder.status === 'in-progress' && (
+                        <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
+                          <h4 className="font-medium text-gray-900 mb-3 flex items-center">
+                            <CreditCard className="w-4 h-4 mr-2 text-yellow-600" />
+                            Payment Reference
+                          </h4>
+                          <div className="space-y-2">
+                            <Label htmlFor="paymentReference" className="text-sm text-gray-700">
+                              Enter payment reference to complete refund *
+                            </Label>
+                            <div className="relative">
+                              <CreditCard className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                              <Input
+                                id="paymentReference"
+                                type="text"
+                                placeholder="e.g., REF123456789"
+                                value={paymentReference}
+                                onChange={(e) => {
+                                  setPaymentReference(e.target.value);
+                                  if (paymentReferenceError) setPaymentReferenceError('');
+                                }}
+                                className={`pl-10 ${paymentReferenceError ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : ''}`}
+                              />
+                            </div>
+                            {paymentReferenceError && (
+                              <p className="text-sm text-red-600 flex items-center">
+                                <AlertCircle className="w-3 h-3 mr-1" />
+                                {paymentReferenceError}
+                              </p>
+                            )}
+                            <p className="text-xs text-gray-500">
+                              This reference will be used to track the refund transaction
+                            </p>
+                          </div>
+                        </div>
+                      )}
+                      <div className="flex justify-end pt-4 border-t">
+                        <Button
+                          onClick={() => handleProcessRefund(selectedOrder.id)}
+                          disabled={!!actionLoading}
+                          className="bg-blue-600 hover:bg-blue-700 text-white"
+                        >
+                          {actionLoading === selectedOrder.id ? (
+                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          ) : (
+                            <CheckCircle2 className="w-4 h-4 mr-2" />
+                          )}
+                          {selectedOrder.status === 'initiated' ? 'Process Refund' : 'Complete Refund'}
+                        </Button>
+                      </div>
                     </div>
                   )}
                 </div>

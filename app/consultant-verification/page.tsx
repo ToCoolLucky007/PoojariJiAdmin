@@ -22,9 +22,11 @@ import {
   Loader2,
   AlertCircle,
   Calendar,
-  Download,
   Globe,
-  Sparkles
+  Sparkles,
+  ZoomIn,
+  X,
+  CreditCard
 } from 'lucide-react';
 
 interface Consultant {
@@ -127,6 +129,8 @@ export default function ConsultantVerificationPage() {
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [actionResult, setActionResult] = useState<{ type: 'success' | 'error', message: string } | null>(null);
+  const [imageZoom, setImageZoom] = useState<string | null>(null);
+
   const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
 
 
@@ -201,7 +205,7 @@ export default function ConsultantVerificationPage() {
         setActionResult({ type: 'error', message: 'Unauthorized: No admin token found.' });
         return;
       }
-      console.log("result" + isapproved);
+
       const response = await fetch(`${baseUrl}/api/admin/consultant/verification/update`, {
         method: 'POST',
         headers: {
@@ -247,14 +251,7 @@ export default function ConsultantVerificationPage() {
       setActionLoading(null);
     }
   };
-  const handleDownloadDocument = (documentName: string) => {
-    console.log(documentName);
-    // Simulate document download
-    const link = document.createElement('a');
-    link.href = '#';
-    link.download = documentName;
-    link.click();
-  };
+
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'approved':
@@ -368,7 +365,11 @@ export default function ConsultantVerificationPage() {
                       <div>
                         <h3 className="text-lg font-semibold text-gray-900">{consultant.name}</h3>
                         <p className="text-sm text-gray-600">{consultant.email}</p>
-                        <p className="text-sm text-gray-500">Submitted: {new Date(consultant.submittedDate).toLocaleDateString()}</p>
+                        <p className="text-sm text-gray-500">
+                          <Calendar className="w-3 h-3 inline mr-1" />
+                          Submitted: {new Date(consultant.submittedDate).toLocaleDateString()}
+                        </p>
+                        <p className="text-sm text-gray-500">Experience: {consultant.experience}</p>
                         <div className="flex flex-wrap gap-1 mt-2">
                           {/* {consultant.skills.slice(0, 3).map((skill) => (
                             <Badge key={skill} variant="outline" className="text-xs">{skill}</Badge>
@@ -419,11 +420,18 @@ export default function ConsultantVerificationPage() {
               {selectedConsultant && (
                 <div className="space-y-6 max-h-[80vh] overflow-y-auto">
                   <div className="flex items-start space-x-6">
-                    <img
-                      src={selectedConsultant.profileImage}
-                      alt={selectedConsultant.name}
-                      className="w-32 h-32 rounded-2xl object-cover border-4 border-gray-200 shadow-lg"
-                    />
+                    <div className="relative">
+                      <img
+                        src={selectedConsultant.profileImage}
+                        alt={selectedConsultant.name}
+                        className="w-32 h-32 rounded-2xl object-cover border-4 border-gray-200 shadow-lg cursor-pointer hover:shadow-xl transition-shadow duration-200"
+                        onClick={() => setImageZoom(selectedConsultant.profileImage)}
+                      />
+                      <div className="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity duration-200 bg-black/20 rounded-2xl cursor-pointer"
+                        onClick={() => setImageZoom(selectedConsultant.profileImage)}>
+                        <ZoomIn className="h-8 w-8 text-white" />
+                      </div>
+                    </div>
                     <div className="flex-1">
                       <h3 className="text-2xl font-bold text-gray-900 mb-2">{selectedConsultant.name}</h3>
                       <p className="text-gray-600 mb-1">{selectedConsultant.email}</p>
@@ -478,31 +486,50 @@ export default function ConsultantVerificationPage() {
 
                   <div className="bg-gray-50 p-4 rounded-lg">
                     <h4 className="font-semibold text-gray-900 mb-3 flex items-center">
-                      <FileText className="w-4 h-4 mr-2 text-gray-600" />
+                      <CreditCard className="w-4 h-4 mr-2 text-gray-600" />
                       Identification Documents
                     </h4>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="bg-white p-3 rounded border">
-                        <div className="flex justify-between items-center">
-                          <div>
-                            <span className="text-sm text-gray-500">Document Type:</span>
-                            <p className="font-medium">{selectedConsultant.idType}</p>
-                          </div>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleDownloadDocument(selectedConsultant.idDocument)}
-                            className="hover:bg-blue-50"
-                          >
-                            <Download className="w-4 h-4 mr-1" />
-                            Download
-                          </Button>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="bg-white p-4 rounded border">
+                        <div className="mb-3">
+
+                          <span className="text-sm text-gray-500">Document Type:</span>
+                          <p className="font-medium">{selectedConsultant.idType}</p>
+
+
+
+
+
+
+
+
+
+
                         </div>
-                      </div>
-                      <div className="bg-white p-3 rounded border">
-                        <div>
+
+                        <div className="mb-3">
+
                           <span className="text-sm text-gray-500">ID Number:</span>
                           <p className="font-mono font-medium">{selectedConsultant.identificationNumber}</p>
+                        </div>
+                      </div>
+
+                      <div className="bg-white p-4 rounded border">
+                        <div className="mb-3">
+                          <span className="text-sm text-gray-500 block mb-2">Document Image:</span>
+                          <div className="relative group">
+                            <img
+                              src={selectedConsultant.idDocument}
+                              alt={`${selectedConsultant.idType} Document`}
+                              className="w-full h-32 object-cover rounded border cursor-pointer hover:shadow-lg transition-shadow duration-200"
+                              onClick={() => setImageZoom(selectedConsultant.idDocument)}
+                            />
+                            <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-black/20 rounded cursor-pointer"
+                              onClick={() => setImageZoom(selectedConsultant.idDocument)}>
+                              <ZoomIn className="h-6 w-6 text-white" />
+                            </div>
+                          </div>
+                          <p className="text-xs text-gray-500 mt-2">Click to view full size</p>
                         </div>
                       </div>
                     </div>
@@ -539,6 +566,28 @@ export default function ConsultantVerificationPage() {
                   )}
                 </div>
               )}
+            </DialogContent>
+          </Dialog>
+          {/* Image Zoom Modal */}
+          <Dialog open={!!imageZoom} onOpenChange={() => setImageZoom(null)}>
+            <DialogContent className="sm:max-w-2xl p-0 bg-transparent border-0 shadow-none">
+              <div className="relative">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="absolute top-2 right-2 z-10 bg-black/50 hover:bg-black/70 text-white rounded-full w-8 h-8 p-0"
+                  onClick={() => setImageZoom(null)}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+                {imageZoom && (
+                  <img
+                    src={imageZoom}
+                    alt="Zoomed Image"
+                    className="w-full h-auto max-h-[80vh] object-contain rounded-lg shadow-2xl"
+                  />
+                )}
+              </div>
             </DialogContent>
           </Dialog>
         </div>
