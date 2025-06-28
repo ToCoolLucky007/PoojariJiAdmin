@@ -12,7 +12,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import {
   Search,
-  Filter,
+
   Eye,
   CheckCircle,
   XCircle,
@@ -20,11 +20,16 @@ import {
   User,
   FileText,
   Loader2,
-  AlertCircle
+  AlertCircle,
+  Calendar,
+  Download,
+  Globe,
+  Sparkles
 } from 'lucide-react';
 
 interface Consultant {
   id: string;
+  consultantid: string;
   name: string;
   email: string;
   phone: string;
@@ -32,57 +37,86 @@ interface Consultant {
   profileImage: string;
   identificationNumber: string;
   idType: string;
+  idDocument: string;
   submittedDate: string;
   status: 'pending' | 'approved' | 'rejected';
   skills: string[];
   experience: string;
+  languages: string[];
+  rituals: string[];
 }
 
-// Mock data
-const mockConsultants: Consultant[] = [
-  {
-    id: '1',
-    name: 'John Smith',
-    email: 'john.smith@email.com',
-    phone: '+1-555-0123',
-    about: 'Experienced web developer with 5+ years in React and Node.js. Passionate about creating scalable applications and mentoring junior developers.',
-    profileImage: 'https://images.pexels.com/photos/2379004/pexels-photo-2379004.jpeg?auto=compress&cs=tinysrgb&w=300',
-    identificationNumber: 'DL123456789',
-    idType: 'Driver License',
-    submittedDate: '2024-01-15',
-    status: 'pending',
-    skills: ['React', 'Node.js', 'TypeScript', 'AWS'],
-    experience: '5+ years'
-  },
-  {
-    id: '2',
-    name: 'Sarah Johnson',
-    email: 'sarah.j@email.com',
-    phone: '+1-555-0124',
-    about: 'Digital marketing specialist with expertise in SEO, social media marketing, and content strategy. Helped 50+ businesses grow their online presence.',
-    profileImage: 'https://images.pexels.com/photos/3763188/pexels-photo-3763188.jpeg?auto=compress&cs=tinysrgb&w=300',
-    identificationNumber: 'SSN987654321',
-    idType: 'Social Security',
-    submittedDate: '2024-01-14',
-    status: 'pending',
-    skills: ['SEO', 'Social Media', 'Content Marketing', 'Analytics'],
-    experience: '3+ years'
-  },
-  {
-    id: '3',
-    name: 'Michael Chen',
-    email: 'michael.chen@email.com',
-    phone: '+1-555-0125',
-    about: 'UI/UX designer focused on creating intuitive and beautiful user experiences. Expert in Figma, Adobe Creative Suite, and user research methodologies.',
-    profileImage: 'https://images.pexels.com/photos/2182970/pexels-photo-2182970.jpeg?auto=compress&cs=tinysrgb&w=300',
-    identificationNumber: 'PP123ABC789',
-    idType: 'Passport',
-    submittedDate: '2024-01-13',
-    status: 'approved',
-    skills: ['UI/UX Design', 'Figma', 'Adobe Creative Suite', 'User Research'],
-    experience: '4+ years'
-  }
-];
+// // Mock data
+// const mockConsultants: Consultant[] = [
+//   {
+//     id: '1',
+//     name: 'Pandit Rajesh Kumar',
+//     email: 'rajesh.kumar@email.com',
+//     phone: '+91-9876543210',
+//     about: 'Experienced Vedic astrologer and ritual specialist with 15+ years of practice. Expert in North Indian Vedic traditions and Sanskrit mantras. Passionate about helping people find spiritual guidance and peace.',
+//     profileImage: 'https://images.pexels.com/photos/2379004/pexels-photo-2379004.jpeg?auto=compress&cs=tinysrgb&w=300',
+//     identificationNumber: 'DL123456789',
+//     idType: 'Aadhaar Card',
+//     idDocument: 'aadhaar_rajesh_kumar.pdf',
+//     submittedDate: '2024-01-15',
+//     status: 'pending',
+//     skills: ['Vedic Astrology', 'Palmistry', 'Vastu Shastra', 'Gemstone Consultation'],
+//     experience: '15+ years',
+//     languages: ['Hindi', 'Sanskrit', 'English', 'Punjabi'],
+//     rituals: ['North Indian Vedic Ritual Style', 'Maharashtrian Vedic Style']
+//   },
+//   {
+//     id: '2',
+//     name: 'Acharya Priya Sharma',
+//     email: 'priya.sharma@email.com',
+//     phone: '+91-9123456789',
+//     about: 'Spiritual counselor and ritual expert specializing in South Indian Agama traditions. Fluent in Tamil and Telugu scriptures with deep knowledge of temple rituals and ceremonies.',
+//     profileImage: 'https://images.pexels.com/photos/3763188/pexels-photo-3763188.jpeg?auto=compress&cs=tinysrgb&w=300',
+//     identificationNumber: 'SSN987654321',
+//     idType: 'PAN Card',
+//     idDocument: 'pan_priya_sharma.pdf',
+//     submittedDate: '2024-01-14',
+//     status: 'pending',
+//     skills: ['Temple Rituals', 'Spiritual Counseling', 'Mantra Chanting', 'Meditation Guidance'],
+//     experience: '12+ years',
+//     languages: ['Tamil', 'Telugu', 'Sanskrit', 'Hindi', 'English'],
+//     rituals: ['South Indian Agama Ritual Style', 'Bengali Tantrik & Vedic Style']
+//   },
+//   {
+//     id: '3',
+//     name: 'Guruji Amit Patel',
+//     email: 'amit.patel@email.com',
+//     phone: '+91-9987654321',
+//     about: 'Traditional Gujarati priest and spiritual guide with expertise in Vedic ceremonies and modern spiritual counseling. Combines ancient wisdom with contemporary understanding.',
+//     profileImage: 'https://images.pexels.com/photos/2182970/pexels-photo-2182970.jpeg?auto=compress&cs=tinysrgb&w=300',
+//     identificationNumber: 'PP123ABC789',
+//     idType: 'Passport',
+//     idDocument: 'passport_amit_patel.pdf',
+//     submittedDate: '2024-01-13',
+//     status: 'approved',
+//     skills: ['Vedic Ceremonies', 'Spiritual Counseling', 'Yoga Philosophy', 'Life Coaching'],
+//     experience: '10+ years',
+//     languages: ['Gujarati', 'Hindi', 'English', 'Sanskrit'],
+//     rituals: ['North Indian Vedic Ritual Style', 'Maharashtrian Vedic Style']
+//   },
+//   {
+//     id: '4',
+//     name: 'Pandit Arjun Bhattacharya',
+//     email: 'arjun.bhattacharya@email.com',
+//     phone: '+91-9876543211',
+//     about: 'Bengali Tantrik and Vedic scholar with deep knowledge of ancient scriptures and modern applications. Specializes in complex rituals and spiritual healing practices.',
+//     profileImage: 'https://images.pexels.com/photos/3785077/pexels-photo-3785077.jpeg?auto=compress&cs=tinysrgb&w=300',
+//     identificationNumber: 'WB123456789',
+//     idType: 'Voter ID',
+//     idDocument: 'voter_id_arjun.pdf',
+//     submittedDate: '2024-01-12',
+//     status: 'pending',
+//     skills: ['Tantrik Practices', 'Vedic Astrology', 'Spiritual Healing', 'Ancient Scriptures'],
+//     experience: '20+ years',
+//     languages: ['Bengali', 'Hindi', 'Sanskrit', 'English'],
+//     rituals: ['Bengali Tantrik & Vedic Style', 'North Indian Vedic Ritual Style']
+//   }
+// ];
 
 export default function ConsultantVerificationPage() {
   const [consultants, setConsultants] = useState<Consultant[]>([]);
@@ -142,8 +176,8 @@ export default function ConsultantVerificationPage() {
 
     if (searchTerm) {
       filtered = filtered.filter(consultant =>
-        consultant.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        consultant.email.toLowerCase().includes(searchTerm.toLowerCase())
+        (consultant.name?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+        (consultant.email?.toLowerCase() || '').includes(searchTerm.toLowerCase())
       );
     }
 
@@ -154,27 +188,53 @@ export default function ConsultantVerificationPage() {
     setFilteredConsultants(filtered);
   }, [searchTerm, statusFilter, consultants]);
 
-  const handleStatusChange = async (consultantId: string, action: 'approve' | 'reject') => {
+  const handleStatusChange = async (consultantId: string, profileid: string, action: 'approve' | 'reject') => {
+
     setActionLoading(consultantId);
     setActionResult(null);
 
     try {
       // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      const isapproved = action === 'approve' ? '1' : '3'; // Assuming 2 = approved, 0 = rejected
+      const token = localStorage.getItem('adminToken');
+      if (!token) {
+        setActionResult({ type: 'error', message: 'Unauthorized: No admin token found.' });
+        return;
+      }
+      console.log("result" + isapproved);
+      const response = await fetch(`${baseUrl}/api/admin/consultant/verification/update`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          consultantid: consultantId,
+          profileid: profileid, // If `profileid` is different, update this accordingly
+          isapproved
+        })
+      });
+
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.message || 'API Error');
+      }
+
+
+      // Update UI
 
       const newStatus = action === 'approve' ? 'approved' : 'rejected';
 
       setConsultants(prev =>
-        prev.map(consultant =>
-          consultant.id === consultantId
-            ? { ...consultant, status: newStatus as 'approved' | 'rejected' }
-            : consultant
+        prev.map(c =>
+          c.id === profileid ? { ...c, status: newStatus as Consultant['status'] } : c
         )
       );
 
       setActionResult({
         type: 'success',
-        message: `Consultant ${action === 'approve' ? 'approved' : 'rejected'} successfully!`
+        message: `Consultant ${newStatus} successfully!`
       });
 
       setSelectedConsultant(null);
@@ -187,7 +247,14 @@ export default function ConsultantVerificationPage() {
       setActionLoading(null);
     }
   };
-
+  const handleDownloadDocument = (documentName: string) => {
+    console.log(documentName);
+    // Simulate document download
+    const link = document.createElement('a');
+    link.href = '#';
+    link.download = documentName;
+    link.click();
+  };
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'approved':
@@ -341,7 +408,7 @@ export default function ConsultantVerificationPage() {
 
           {/* Detail Modal */}
           <Dialog open={!!selectedConsultant} onOpenChange={() => setSelectedConsultant(null)}>
-            <DialogContent className="sm:max-w-2xl">
+            <DialogContent className="sm:max-w-4xl">
               <DialogHeader>
                 <DialogTitle>Consultant Verification Details</DialogTitle>
                 <DialogDescription>
@@ -350,45 +417,93 @@ export default function ConsultantVerificationPage() {
               </DialogHeader>
 
               {selectedConsultant && (
-                <div className="space-y-6">
-                  <div className="flex items-center space-x-4">
+                <div className="space-y-6 max-h-[80vh] overflow-y-auto">
+                  <div className="flex items-start space-x-6">
                     <img
                       src={selectedConsultant.profileImage}
                       alt={selectedConsultant.name}
-                      className="w-20 h-20 rounded-full object-cover border-2 border-gray-200"
+                      className="w-32 h-32 rounded-2xl object-cover border-4 border-gray-200 shadow-lg"
                     />
-                    <div>
-                      <h3 className="text-xl font-semibold text-gray-900">{selectedConsultant.name}</h3>
-                      <p className="text-gray-600">{selectedConsultant.email}</p>
-                      <p className="text-gray-600">{selectedConsultant.phone}</p>
-                      <p className="text-sm text-gray-500">Experience: {selectedConsultant.experience}</p>
+                    <div className="flex-1">
+                      <h3 className="text-2xl font-bold text-gray-900 mb-2">{selectedConsultant.name}</h3>
+                      <p className="text-gray-600 mb-1">{selectedConsultant.email}</p>
+                      <p className="text-gray-600 mb-1">{selectedConsultant.phone}</p>
+                      <p className="text-sm text-gray-500 mb-3">Experience: {selectedConsultant.experience}</p>
+                      <div className="flex items-center space-x-2">
+
+                        {getStatusBadge(selectedConsultant.status)}
+                      </div>
                     </div>
                   </div>
 
                   <div>
-                    <h4 className="font-medium text-gray-900 mb-2">About</h4>
-                    <p className="text-gray-700 text-sm leading-relaxed">{selectedConsultant.about}</p>
+                    <h4 className="font-semibold text-gray-900 mb-3 flex items-center">
+                      <FileText className="w-4 h-4 mr-2 text-blue-600" />
+                      About
+                    </h4>
+                    <p className="text-gray-700 text-sm leading-relaxed bg-gray-50 p-4 rounded-lg">{selectedConsultant.about}</p>
                   </div>
 
-                  <div>
-                    <h4 className="font-medium text-gray-900 mb-2">Skills</h4>
-                    <div className="flex flex-wrap gap-2">
-                      {/* {selectedConsultant.skills.map((skill) => (
-                        <Badge key={skill} variant="outline">{skill}</Badge>
-                      ))} */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="bg-blue-50 p-4 rounded-lg">
+                      <h4 className="font-semibold text-gray-900 mb-3 flex items-center">
+                        <Globe className="w-4 h-4 mr-2 text-blue-600" />
+                        Languages
+                      </h4>
+                      <div className="flex flex-wrap gap-2">
+                        {selectedConsultant.languages.map((language) => (
+                          <Badge key={language} className="bg-blue-100 text-blue-800 hover:bg-blue-100">
+                            {language}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="bg-purple-50 p-4 rounded-lg">
+                      <h4 className="font-semibold text-gray-900 mb-3 flex items-center">
+                        <Sparkles className="w-4 h-4 mr-2 text-purple-600" />
+                        Ritual Styles
+                      </h4>
+                      <div className="space-y-2">
+                        {selectedConsultant.rituals.map((ritual) => (
+                          <Badge key={ritual} variant="outline" className="bg-purple-50 text-purple-700 border-purple-200 block w-full text-center">
+                            {ritual}
+                          </Badge>
+                        ))}
+                      </div>
                     </div>
                   </div>
+
+
 
                   <div className="bg-gray-50 p-4 rounded-lg">
-                    <h4 className="font-medium text-gray-900 mb-2">Identification</h4>
-                    <div className="grid grid-cols-2 gap-4 text-sm">
-                      <div>
-                        <span className="text-gray-500">Type:</span>
-                        <p className="font-medium">{selectedConsultant.idType}</p>
+                    <h4 className="font-semibold text-gray-900 mb-3 flex items-center">
+                      <FileText className="w-4 h-4 mr-2 text-gray-600" />
+                      Identification Documents
+                    </h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="bg-white p-3 rounded border">
+                        <div className="flex justify-between items-center">
+                          <div>
+                            <span className="text-sm text-gray-500">Document Type:</span>
+                            <p className="font-medium">{selectedConsultant.idType}</p>
+                          </div>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleDownloadDocument(selectedConsultant.idDocument)}
+                            className="hover:bg-blue-50"
+                          >
+                            <Download className="w-4 h-4 mr-1" />
+                            Download
+                          </Button>
+                        </div>
                       </div>
-                      <div>
-                        <span className="text-gray-500">Number:</span>
-                        <p className="font-medium">{selectedConsultant.identificationNumber}</p>
+                      <div className="bg-white p-3 rounded border">
+                        <div>
+                          <span className="text-sm text-gray-500">ID Number:</span>
+                          <p className="font-mono font-medium">{selectedConsultant.identificationNumber}</p>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -397,7 +512,7 @@ export default function ConsultantVerificationPage() {
                     <div className="flex justify-end space-x-3 pt-4 border-t">
                       <Button
                         variant="outline"
-                        onClick={() => handleStatusChange(selectedConsultant.id, 'reject')}
+                        onClick={() => handleStatusChange(selectedConsultant.consultantid, selectedConsultant.id, 'reject')}
                         disabled={!!actionLoading}
                         className="hover:bg-red-50 hover:border-red-200"
                       >
@@ -409,7 +524,7 @@ export default function ConsultantVerificationPage() {
                         Reject
                       </Button>
                       <Button
-                        onClick={() => handleStatusChange(selectedConsultant.id, 'approve')}
+                        onClick={() => handleStatusChange(selectedConsultant.consultantid, selectedConsultant.id, 'approve')}
                         disabled={!!actionLoading}
                         className="bg-green-600 hover:bg-green-700 text-white"
                       >
