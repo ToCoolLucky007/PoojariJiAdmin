@@ -1,8 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import AdminLayout from '@/components/AdminLayout';
 import ProtectedRoute from '@/components/ProtectedRoute';
+import PeriodFilter from '@/components/PeriodFilter';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -22,6 +23,15 @@ import {
   Package,
   TrendingUp
 } from 'lucide-react';
+import { TimePeriod, getDateRangeForPeriod, filterDataByDateRange, calculatePeriodComparison } from '@/lib/date-utils';
+
+interface Item {
+  name: string;
+  quantity: string;
+  measurement: string;
+  price: string;
+}
+
 
 interface Order {
   id: string;
@@ -31,12 +41,13 @@ interface Order {
   freelancerName: string;
   serviceName: string;
   category: string;
+  orderType: string;
   orderAmount: number;
   orderDate: string;
   deliveryDate: string;
   status: 'pending' | 'in-progress' | 'completed' | 'cancelled';
   paymentStatus: 'paid' | 'pending' | 'refunded';
-  description: string;
+  items: Item[];
   requirements: string[];
   deliverables: string[];
 }
@@ -51,12 +62,13 @@ const mockOrders: Order[] = [
     freelancerName: 'Alex Johnson',
     serviceName: 'E-commerce Website Development',
     category: 'Web Development',
+    orderType: "Standalone",
     orderAmount: 2500,
-    orderDate: '2024-01-15',
+    orderDate: '2025-06-15',
     deliveryDate: '2024-02-15',
     status: 'in-progress',
     paymentStatus: 'paid',
-    description: 'Complete e-commerce website with payment integration and admin panel',
+    items: [{ "price": 12.00, "itemid": 4, "itemname": "Item 1", "quantity": 1, "bookingid": 73, "measurement": "Kg" }, { "price": 13.00, "itemid": 3, "itemname": "Item 3", "quantity": 14, "bookingid": 73, "measurement": "Litre" }],
     requirements: ['Responsive design', 'Payment gateway integration', 'Admin dashboard', 'Product catalog'],
     deliverables: ['Source code', 'Documentation', 'Deployment guide', '30 days support']
   },
@@ -68,12 +80,12 @@ const mockOrders: Order[] = [
     freelancerName: 'Sarah Chen',
     serviceName: 'Brand Identity Design',
     category: 'Design',
+    orderType: "Standalone",
     orderAmount: 800,
-    orderDate: '2024-01-14',
-    deliveryDate: '2024-01-28',
+    orderDate: '2025-06-14',
+    deliveryDate: '2025-06-28',
     status: 'completed',
     paymentStatus: 'paid',
-    description: 'Complete brand identity package including logo, business cards, and brand guidelines',
     requirements: ['Logo design', 'Business card design', 'Brand guidelines', 'Color palette'],
     deliverables: ['Logo files (AI, PNG, SVG)', 'Business card design', 'Brand guideline document', 'Color palette']
   },
@@ -85,12 +97,12 @@ const mockOrders: Order[] = [
     freelancerName: 'Michael Rodriguez',
     serviceName: 'SEO Optimization Campaign',
     category: 'Digital Marketing',
+    orderType: "Standalone",
     orderAmount: 1200,
-    orderDate: '2024-01-13',
+    orderDate: '2025-06-13',
     deliveryDate: '2024-02-13',
     status: 'in-progress',
     paymentStatus: 'paid',
-    description: '3-month SEO campaign to improve website ranking and organic traffic',
     requirements: ['Keyword research', 'On-page optimization', 'Content strategy', 'Monthly reports'],
     deliverables: ['SEO audit report', 'Optimized content', 'Backlink strategy', 'Monthly performance reports']
   },
@@ -102,12 +114,12 @@ const mockOrders: Order[] = [
     freelancerName: 'Emma Wilson',
     serviceName: 'Data Analysis Dashboard',
     category: 'Data Science',
+    orderType: "Standalone",
     orderAmount: 1800,
-    orderDate: '2024-01-12',
-    deliveryDate: '2024-01-26',
+    orderDate: '2025-06-12',
+    deliveryDate: '2025-06-26',
     status: 'pending',
     paymentStatus: 'pending',
-    description: 'Interactive dashboard for sales data analysis with predictive insights',
     requirements: ['Data visualization', 'Interactive charts', 'Predictive analytics', 'Export functionality'],
     deliverables: ['Dashboard application', 'Source code', 'User manual', 'Training session']
   }
@@ -115,27 +127,35 @@ const mockOrders: Order[] = [
 
 export default function OrderDetailsPage() {
   const [orders, setOrders] = useState<Order[]>([]);
-  const [filteredOrders, setFilteredOrders] = useState<Order[]>([]);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
+
+  // 🔥 PERIOD FILTERING STATE - THIS CONTROLS THE TIME PERIOD
+  const [selectedPeriod, setSelectedPeriod] = useState<TimePeriod>('this-month');
+  const [customDateRange, setCustomDateRange] = useState<{ from?: Date; to?: Date }>({});
 
   useEffect(() => {
     const fetchOrders = async () => {
       setIsLoading(true);
       await new Promise(resolve => setTimeout(resolve, 1000));
       setOrders(mockOrders);
-      setFilteredOrders(mockOrders);
       setIsLoading(false);
     };
 
     fetchOrders();
   }, []);
 
-  useEffect(() => {
+  // 🔥 FILTER DATA BY PERIOD AND OTHER CRITERIA - THIS IS WHERE THE MAGIC HAPPENS
+  const filteredOrders = useMemo(() => {
     let filtered = orders;
 
+    // 🔥 FILTER BY DATE PERIOD - FILTERS ORDERS BY THEIR ORDER DATE
+    const dateRange = getDateRangeForPeriod(selectedPeriod, customDateRange);
+    filtered = filterDataByDateRange(filtered, 'orderDate', dateRange);
+
+    // Filter by search term
     if (searchTerm) {
       filtered = filtered.filter(order =>
         order.orderId.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -145,12 +165,46 @@ export default function OrderDetailsPage() {
       );
     }
 
+    // Filter by status
     if (statusFilter !== 'all') {
       filtered = filtered.filter(order => order.status === statusFilter);
     }
 
-    setFilteredOrders(filtered);
-  }, [searchTerm, statusFilter, orders]);
+    return filtered;
+  }, [orders, selectedPeriod, customDateRange, searchTerm, statusFilter]);
+
+  // 🔥 CALCULATE PERIOD COMPARISON - COMPARES CURRENT VS PREVIOUS PERIOD
+  const periodComparison = useMemo(() => {
+    const currentRange = getDateRangeForPeriod(selectedPeriod, customDateRange);
+    const currentData = filterDataByDateRange(orders, 'orderDate', currentRange);
+
+    // Get previous period data for comparison
+    let previousPeriod: TimePeriod = 'last-month';
+    if (selectedPeriod === 'today') previousPeriod = 'yesterday';
+    else if (selectedPeriod === 'this-week') previousPeriod = 'last-week';
+    else if (selectedPeriod === 'this-month') previousPeriod = 'last-month';
+
+    const previousRange = getDateRangeForPeriod(previousPeriod);
+    const previousData = filterDataByDateRange(orders, 'orderDate', previousRange);
+
+    return calculatePeriodComparison(currentData, previousData);
+  }, [orders, selectedPeriod, customDateRange]);
+
+  // Calculate revenue comparison
+  const revenueComparison = useMemo(() => {
+    const currentRange = getDateRangeForPeriod(selectedPeriod, customDateRange);
+    const currentData = filterDataByDateRange(orders, 'orderDate', currentRange);
+
+    let previousPeriod: TimePeriod = 'last-month';
+    if (selectedPeriod === 'today') previousPeriod = 'yesterday';
+    else if (selectedPeriod === 'this-week') previousPeriod = 'last-week';
+    else if (selectedPeriod === 'this-month') previousPeriod = 'last-month';
+
+    const previousRange = getDateRangeForPeriod(previousPeriod);
+    const previousData = filterDataByDateRange(orders, 'orderDate', previousRange);
+
+    return calculatePeriodComparison(currentData, previousData, 'orderAmount');
+  }, [orders, selectedPeriod, customDateRange]);
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -219,6 +273,17 @@ export default function OrderDetailsPage() {
             </Badge>
           </div>
 
+          {/* 🔥 PERIOD FILTER COMPONENT - THIS IS THE UI FOR SELECTING TIME PERIODS */}
+          <PeriodFilter
+            selectedPeriod={selectedPeriod}
+            onPeriodChange={setSelectedPeriod}
+            customDateRange={customDateRange}
+            onCustomDateRangeChange={(from, to) => setCustomDateRange({ from, to })}
+            showComparison={false}
+            title="Filter Orders by Date"
+            description="View orders placed during the selected period"
+          />
+
           {/* Stats Cards */}
           <div className="grid gap-4 md:grid-cols-4">
             <Card className="bg-white/80 backdrop-blur-xl border-0 shadow-xl">
@@ -226,7 +291,7 @@ export default function OrderDetailsPage() {
                 <div className="flex items-center space-x-2">
                   <ShoppingCart className="h-8 w-8 text-blue-600" />
                   <div>
-                    <p className="text-2xl font-bold text-gray-900">{orders.length}</p>
+                    <p className="text-2xl font-bold text-gray-900">{filteredOrders.length}</p>
                     <p className="text-sm text-gray-500">Total Orders</p>
                   </div>
                 </div>
@@ -237,7 +302,7 @@ export default function OrderDetailsPage() {
                 <div className="flex items-center space-x-2">
                   <TrendingUp className="h-8 w-8 text-green-600" />
                   <div>
-                    <p className="text-2xl font-bold text-gray-900">{orders.filter(o => o.status === 'completed').length}</p>
+                    <p className="text-2xl font-bold text-gray-900">{filteredOrders.filter(o => o.status === 'completed').length}</p>
                     <p className="text-sm text-gray-500">Completed</p>
                   </div>
                 </div>
@@ -248,7 +313,7 @@ export default function OrderDetailsPage() {
                 <div className="flex items-center space-x-2">
                   <Clock className="h-8 w-8 text-blue-600" />
                   <div>
-                    <p className="text-2xl font-bold text-gray-900">{orders.filter(o => o.status === 'in-progress').length}</p>
+                    <p className="text-2xl font-bold text-gray-900">{filteredOrders.filter(o => o.status === 'in-progress').length}</p>
                     <p className="text-sm text-gray-500">In Progress</p>
                   </div>
                 </div>
@@ -259,7 +324,7 @@ export default function OrderDetailsPage() {
                 <div className="flex items-center space-x-2">
                   <DollarSign className="h-8 w-8 text-green-600" />
                   <div>
-                    <p className="text-2xl font-bold text-gray-900">${orders.reduce((sum, o) => sum + o.orderAmount, 0).toLocaleString()}</p>
+                    <p className="text-2xl font-bold text-gray-900">${filteredOrders.reduce((sum, o) => sum + o.orderAmount, 0).toLocaleString()}</p>
                     <p className="text-sm text-gray-500">Total Value</p>
                   </div>
                 </div>
@@ -267,9 +332,52 @@ export default function OrderDetailsPage() {
             </Card>
           </div>
 
+          {/* Revenue Comparison Card */}
+          {revenueComparison && (
+            <Card className="bg-gradient-to-r from-green-50 to-emerald-50 border-0 shadow-xl">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center space-x-2">
+                    <DollarSign className="h-6 w-6 text-green-600" />
+                    <span className="text-sm font-medium text-gray-700">Revenue Comparison</span>
+                  </div>
+                  <Badge
+                    variant="outline"
+                    className={`${revenueComparison.trend === 'up' ? 'text-green-600 bg-green-100' :
+                      revenueComparison.trend === 'down' ? 'text-red-600 bg-red-100' :
+                        'text-gray-600 bg-gray-100'
+                      } border-0`}
+                  >
+                    {revenueComparison.trend === 'up' ? '↗️' : revenueComparison.trend === 'down' ? '↘️' : '→'}
+                    <span className="ml-1">
+                      {revenueComparison.percentage >= 0 ? '+' : ''}{revenueComparison.percentage.toFixed(1)}%
+                    </span>
+                  </Badge>
+                </div>
+                <div className="grid grid-cols-3 gap-4 text-center">
+                  <div>
+                    <div className="text-lg font-semibold text-gray-900">${revenueComparison.current.toLocaleString()}</div>
+                    <div className="text-xs text-gray-500">Current Period</div>
+                  </div>
+                  <div>
+                    <div className="text-lg font-semibold text-gray-600">${revenueComparison.previous.toLocaleString()}</div>
+                    <div className="text-xs text-gray-500">Previous Period</div>
+                  </div>
+                  <div>
+                    <div className={`text-lg font-semibold ${revenueComparison.change >= 0 ? 'text-green-600' : 'text-red-600'
+                      }`}>
+                      {revenueComparison.change >= 0 ? '+' : ''}${revenueComparison.change.toLocaleString()}
+                    </div>
+                    <div className="text-xs text-gray-500">Change</div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           <Card className="bg-white/80 backdrop-blur-xl border-0 shadow-xl">
             <CardHeader>
-              <CardTitle>Filter Orders</CardTitle>
+              <CardTitle>Additional Filters</CardTitle>
               <CardDescription>Search and filter order records</CardDescription>
             </CardHeader>
             <CardContent>
@@ -331,6 +439,7 @@ export default function OrderDetailsPage() {
                           </p>
                         </div>
                         <Badge variant="outline" className="text-xs mt-1">{order.category}</Badge>
+                        <Badge variant="outline" className="text-xs mt-1">{order.ordertype}</Badge>
                       </div>
                     </div>
                     <div className="flex items-center space-x-3">
@@ -360,7 +469,7 @@ export default function OrderDetailsPage() {
               <CardContent className="p-12 text-center">
                 <ShoppingCart className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                 <h3 className="text-lg font-medium text-gray-900 mb-2">No orders found</h3>
-                <p className="text-gray-500">Try adjusting your search or filter criteria.</p>
+                <p className="text-gray-500">Try adjusting your search, filters, or time period.</p>
               </CardContent>
             </Card>
           )}
@@ -391,8 +500,14 @@ export default function OrderDetailsPage() {
                         </div>
                         <div className="flex justify-between">
                           <span className="text-gray-500">Category:</span>
-                          <Badge variant="outline" className="text-xs">{selectedOrder.category}</Badge>
+
+                          <span className="font-medium">{selectedOrder.category}</span>
                         </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-500">Order Type:</span>
+                          <span className="font-medium">{selectedOrder.orderType}</span>
+                        </div>
+
                         <div className="flex justify-between">
                           <span className="text-gray-500">Amount:</span>
                           <span className="font-medium text-green-600">${selectedOrder.orderAmount.toLocaleString()}</span>
@@ -427,12 +542,17 @@ export default function OrderDetailsPage() {
                     </div>
                   </div>
 
-                  <div>
-                    <h4 className="font-medium text-gray-900 mb-2">Description</h4>
-                    <p className="text-gray-700 text-sm bg-gray-50 p-3 rounded-lg">{selectedOrder.description}</p>
+                  <div className="bg-blue-50 p-4 rounded-lg">
+                    <h4 className="font-medium text-gray-900 mb-4 flex items-center">
+
+                      Product items
+                    </h4>
+                    <div className="space-y-6">
+
+                    </div>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="bg-blue-50 p-4 rounded-lg">
                       <h4 className="font-medium text-gray-900 mb-3">Requirements</h4>
                       <ul className="space-y-1 text-sm">
@@ -456,7 +576,7 @@ export default function OrderDetailsPage() {
                         ))}
                       </ul>
                     </div>
-                  </div>
+                  </div> */}
 
                   <div className="flex justify-between items-center pt-4 border-t">
                     <div className="flex space-x-4">
