@@ -21,17 +21,21 @@ import {
   CheckCircle,
   AlertCircle,
   Package,
-  TrendingUp
+  TrendingUp,
+  ShoppingBag,
+  Hash,
+  Scale
 } from 'lucide-react';
 import { TimePeriod, getDateRangeForPeriod, filterDataByDateRange, calculatePeriodComparison } from '@/lib/date-utils';
 
-interface Item {
-  name: string;
-  quantity: string;
+interface OrderItem {
+  price: number;
+  itemid: number;
+  itemname: string;
+  quantity: number;
+  bookingid: number;
   measurement: string;
-  price: string;
 }
-
 
 interface Order {
   id: string;
@@ -41,15 +45,12 @@ interface Order {
   freelancerName: string;
   serviceName: string;
   category: string;
-  orderType: string;
   orderAmount: number;
   orderDate: string;
   deliveryDate: string;
   status: 'pending' | 'in-progress' | 'completed' | 'cancelled';
   paymentStatus: 'paid' | 'pending' | 'refunded';
-  items: Item[];
-  requirements: string[];
-  deliverables: string[];
+  items: OrderItem[];
 }
 
 // Mock data
@@ -62,15 +63,17 @@ const mockOrders: Order[] = [
     freelancerName: 'Alex Johnson',
     serviceName: 'E-commerce Website Development',
     category: 'Web Development',
-    orderType: "Standalone",
     orderAmount: 2500,
     orderDate: '2025-06-15',
     deliveryDate: '2024-02-15',
     status: 'in-progress',
     paymentStatus: 'paid',
-    items: [{ "price": 12.00, "itemid": 4, "itemname": "Item 1", "quantity": 1, "bookingid": 73, "measurement": "Kg" }, { "price": 13.00, "itemid": 3, "itemname": "Item 3", "quantity": 14, "bookingid": 73, "measurement": "Litre" }],
-    requirements: ['Responsive design', 'Payment gateway integration', 'Admin dashboard', 'Product catalog'],
-    deliverables: ['Source code', 'Documentation', 'Deployment guide', '30 days support']
+    items: [
+      { price: 1200.00, itemid: 1, itemname: 'Frontend Development', quantity: 1, bookingid: 73, measurement: 'Project' },
+      { price: 800.00, itemid: 2, itemname: 'Backend API', quantity: 1, bookingid: 73, measurement: 'Project' },
+      { price: 300.00, itemid: 3, itemname: 'Database Setup', quantity: 1, bookingid: 73, measurement: 'Project' },
+      { price: 200.00, itemid: 4, itemname: 'Testing & QA', quantity: 1, bookingid: 73, measurement: 'Hours' }
+    ]
   },
   {
     id: '2',
@@ -80,14 +83,16 @@ const mockOrders: Order[] = [
     freelancerName: 'Sarah Chen',
     serviceName: 'Brand Identity Design',
     category: 'Design',
-    orderType: "Standalone",
     orderAmount: 800,
     orderDate: '2025-06-14',
     deliveryDate: '2025-06-28',
     status: 'completed',
     paymentStatus: 'paid',
-    requirements: ['Logo design', 'Business card design', 'Brand guidelines', 'Color palette'],
-    deliverables: ['Logo files (AI, PNG, SVG)', 'Business card design', 'Brand guideline document', 'Color palette']
+    items: [
+      { price: 400.00, itemid: 5, itemname: 'Logo Design', quantity: 1, bookingid: 74, measurement: 'Design' },
+      { price: 150.00, itemid: 6, itemname: 'Business Card Design', quantity: 2, bookingid: 74, measurement: 'Design' },
+      { price: 250.00, itemid: 7, itemname: 'Brand Guidelines', quantity: 1, bookingid: 74, measurement: 'Document' }
+    ]
   },
   {
     id: '3',
@@ -97,14 +102,16 @@ const mockOrders: Order[] = [
     freelancerName: 'Michael Rodriguez',
     serviceName: 'SEO Optimization Campaign',
     category: 'Digital Marketing',
-    orderType: "Standalone",
     orderAmount: 1200,
     orderDate: '2025-06-13',
     deliveryDate: '2024-02-13',
     status: 'in-progress',
     paymentStatus: 'paid',
-    requirements: ['Keyword research', 'On-page optimization', 'Content strategy', 'Monthly reports'],
-    deliverables: ['SEO audit report', 'Optimized content', 'Backlink strategy', 'Monthly performance reports']
+    items: [
+      { price: 300.00, itemid: 8, itemname: 'Keyword Research', quantity: 1, bookingid: 75, measurement: 'Report' },
+      { price: 500.00, itemid: 9, itemname: 'On-page Optimization', quantity: 10, bookingid: 75, measurement: 'Pages' },
+      { price: 400.00, itemid: 10, itemname: 'Content Strategy', quantity: 3, bookingid: 75, measurement: 'Months' }
+    ]
   },
   {
     id: '4',
@@ -114,14 +121,12 @@ const mockOrders: Order[] = [
     freelancerName: 'Emma Wilson',
     serviceName: 'Data Analysis Dashboard',
     category: 'Data Science',
-    orderType: "Standalone",
     orderAmount: 1800,
     orderDate: '2025-06-12',
     deliveryDate: '2025-06-26',
     status: 'pending',
     paymentStatus: 'pending',
-    requirements: ['Data visualization', 'Interactive charts', 'Predictive analytics', 'Export functionality'],
-    deliverables: ['Dashboard application', 'Source code', 'User manual', 'Training session']
+    items: []
   }
 ];
 
@@ -279,7 +284,7 @@ export default function OrderDetailsPage() {
             onPeriodChange={setSelectedPeriod}
             customDateRange={customDateRange}
             onCustomDateRangeChange={(from, to) => setCustomDateRange({ from, to })}
-            showComparison={false}
+            comparison={periodComparison}
             title="Filter Orders by Date"
             description="View orders placed during the selected period"
           />
@@ -437,9 +442,12 @@ export default function OrderDetailsPage() {
                             <DollarSign className="w-3 h-3 inline mr-1" />
                             ${order.orderAmount.toLocaleString()}
                           </p>
+                          <p className="text-sm text-gray-500">
+                            <ShoppingBag className="w-3 h-3 inline mr-1" />
+                            {order.items.length} items
+                          </p>
                         </div>
                         <Badge variant="outline" className="text-xs mt-1">{order.category}</Badge>
-                        <Badge variant="outline" className="text-xs mt-1">{order.ordertype}</Badge>
                       </div>
                     </div>
                     <div className="flex items-center space-x-3">
@@ -476,7 +484,7 @@ export default function OrderDetailsPage() {
 
           {/* Detail Modal */}
           <Dialog open={!!selectedOrder} onOpenChange={() => setSelectedOrder(null)}>
-            <DialogContent className="sm:max-w-3xl">
+            <DialogContent className="sm:max-w-4xl">
               <DialogHeader>
                 <DialogTitle>Order Details</DialogTitle>
                 <DialogDescription>
@@ -485,7 +493,7 @@ export default function OrderDetailsPage() {
               </DialogHeader>
 
               {selectedOrder && (
-                <div className="space-y-6 max-h-[70vh] overflow-y-auto">
+                <div className="space-y-6 max-h-[80vh] overflow-y-auto">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
                       <h4 className="font-medium text-gray-900 mb-3">Order Information</h4>
@@ -500,14 +508,8 @@ export default function OrderDetailsPage() {
                         </div>
                         <div className="flex justify-between">
                           <span className="text-gray-500">Category:</span>
-
-                          <span className="font-medium">{selectedOrder.category}</span>
+                          <Badge variant="outline" className="text-xs">{selectedOrder.category}</Badge>
                         </div>
-                        <div className="flex justify-between">
-                          <span className="text-gray-500">Order Type:</span>
-                          <span className="font-medium">{selectedOrder.orderType}</span>
-                        </div>
-
                         <div className="flex justify-between">
                           <span className="text-gray-500">Amount:</span>
                           <span className="font-medium text-green-600">${selectedOrder.orderAmount.toLocaleString()}</span>
@@ -542,41 +544,70 @@ export default function OrderDetailsPage() {
                     </div>
                   </div>
 
-                  <div className="bg-blue-50 p-4 rounded-lg">
+
+
+                  {/* Order Items Section */}
+                  <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
                     <h4 className="font-medium text-gray-900 mb-4 flex items-center">
-
-                      Product items
+                      <ShoppingBag className="w-4 h-4 mr-2 text-blue-600" />
+                      Order Items ({selectedOrder.items.length} items)
                     </h4>
-                    <div className="space-y-6">
+                    <div className="space-y-3">
+                      {selectedOrder.items.map((item, index) => (
+                        <div key={index} className="bg-white p-4 rounded-lg border border-blue-100 shadow-sm">
+                          <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center space-x-3">
+                              <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg flex items-center justify-center">
+                                <Package className="h-5 w-5 text-white" />
+                              </div>
+                              <div>
+                                <h5 className="font-semibold text-gray-900">{item.itemname}</h5>
+                                <div className="flex items-center space-x-4 text-xs text-gray-500">
+                                  <span className="flex items-center">
+                                    <Hash className="w-3 h-3 mr-1" />
+                                    ID: {item.itemid}
+                                  </span>
+                                  <span className="flex items-center">
+                                    <Scale className="w-3 h-3 mr-1" />
+                                    {item.measurement}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <div className="text-lg font-bold text-green-600">${item.price.toFixed(2)}</div>
+                              <div className="text-xs text-gray-500">per {item.measurement}</div>
+                            </div>
+                          </div>
+                          <div className="flex items-center justify-between bg-gray-50 p-2 rounded">
+                            <div className="flex items-center space-x-2">
+                              <span className="text-sm text-gray-600">Quantity:</span>
+                              <Badge variant="outline" className="bg-white">{item.quantity}</Badge>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <span className="text-sm text-gray-600">Subtotal:</span>
+                              <span className="font-semibold text-gray-900">${(item.price * item.quantity).toFixed(2)}</span>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
 
+                    {/* Order Total */}
+                    <div className="mt-4 pt-4 border-t border-blue-200">
+                      <div className="flex justify-between items-center">
+                        <span className="text-lg font-semibold text-gray-900">Order Total:</span>
+                        <span className="text-2xl font-bold text-green-600">
+                          ${selectedOrder.items.reduce((total, item) => total + (item.price * item.quantity), 0).toFixed(2)}
+                        </span>
+                      </div>
+                      <div className="text-xs text-gray-500 mt-1">
+                        Total of {selectedOrder.items.reduce((total, item) => total + item.quantity, 0)} items
+                      </div>
                     </div>
                   </div>
 
-                  {/* <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="bg-blue-50 p-4 rounded-lg">
-                      <h4 className="font-medium text-gray-900 mb-3">Requirements</h4>
-                      <ul className="space-y-1 text-sm">
-                        {selectedOrder.requirements.map((req, index) => (
-                          <li key={index} className="flex items-start">
-                            <CheckCircle className="w-4 h-4 text-blue-600 mr-2 mt-0.5 flex-shrink-0" />
-                            <span>{req}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
 
-                    <div className="bg-green-50 p-4 rounded-lg">
-                      <h4 className="font-medium text-gray-900 mb-3">Deliverables</h4>
-                      <ul className="space-y-1 text-sm">
-                        {selectedOrder.deliverables.map((deliverable, index) => (
-                          <li key={index} className="flex items-start">
-                            <Package className="w-4 h-4 text-green-600 mr-2 mt-0.5 flex-shrink-0" />
-                            <span>{deliverable}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  </div> */}
 
                   <div className="flex justify-between items-center pt-4 border-t">
                     <div className="flex space-x-4">
