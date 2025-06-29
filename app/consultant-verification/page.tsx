@@ -135,45 +135,45 @@ export default function ConsultantVerificationPage() {
 
   const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
 
+  const fetchConsultants = async () => {
+    try {
+      setIsLoading(true);
 
-
-  useEffect(() => {
-    const fetchConsultants = async () => {
-      try {
-        setIsLoading(true);
-
-        const token = localStorage.getItem('adminToken');
-        if (!token) {
-          console.warn('No admin token found');
-          return;
+      const token = localStorage.getItem('adminToken');
+      if (!token) {
+        console.warn('No admin token found');
+        return;
+      }
+      const [startDate, endDate] = [new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], new Date().toISOString().split('T')[0]];
+      const response = await fetch(`${baseUrl}/api/admin/consultants?vsub=1&startdate=${startDate}&enddate=${endDate}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
         }
-        const [startDate, endDate] = [new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], new Date().toISOString().split('T')[0]];
-        const response = await fetch(`${baseUrl}/api/admin/consultants?vsub=1&startdate=${startDate}&enddate=${endDate}`, {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          }
-        });
+      });
 
-        const data = await response.json();
+      const data = await response.json();
 
-        if (response.ok && data.success && Array.isArray(data.data)) {
-          setConsultants(data.data);
-          setFilteredConsultants(data.data);
-        } else {
-          console.error('Failed to fetch consultants:', data.message || 'Unknown error');
-          setConsultants([]);
-          setFilteredConsultants([]);
-        }
-      } catch (error) {
-        console.error('Error fetching consultants:', error);
+      if (response.ok && data.success && Array.isArray(data.data)) {
+        setConsultants(data.data);
+        setFilteredConsultants(data.data);
+      } else {
+        console.error('Failed to fetch consultants:', data.message || 'Unknown error');
         setConsultants([]);
         setFilteredConsultants([]);
-      } finally {
-        setIsLoading(false);
       }
-    };
+    } catch (error) {
+      console.error('Error fetching consultants:', error);
+      setConsultants([]);
+      setFilteredConsultants([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+
 
     fetchConsultants();
   }, []);
@@ -255,7 +255,10 @@ export default function ConsultantVerificationPage() {
     }
   };
 
-
+  const handleActionComplete = () => {
+    // Refresh the data after an action is completed
+    fetchConsultants();
+  };
   const getProfileBadge = (profile: string) => {
     switch (profile) {
       case 'approved':

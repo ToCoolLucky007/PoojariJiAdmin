@@ -264,47 +264,45 @@ export default function FreelancerDetailsPage() {
   const [customDateRange, setCustomDateRange] = useState<{ from?: Date; to?: Date }>({});
 
 
+  const fetchFreelancers = async () => {
+    try {
+      setIsLoading(true);
 
-  useEffect(() => {
-    const fetchFreelancers = async () => {
-      try {
-        setIsLoading(true);
-
-        const token = localStorage.getItem('adminToken');
-        if (!token) {
-          console.warn('No admin token found');
-          return;
-        }
-        const currentRange = getDateRangeForPeriod(selectedPeriod, customDateRange);
-        const startDate = new Date(currentRange.from).toISOString().split('T')[0];
-        const endDate = new Date(currentRange.to).toISOString().split('T')[0];
-        const response = await fetch(`${baseUrl}/api/admin/consultants?vsub=0&startdate=${startDate}&enddate=${endDate}`, {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          }
-        });
-
-        const data = await response.json();
-
-        if (response.ok && data.success && Array.isArray(data.data)) {
-          setFreelancers(data.data);
-          //setFilteredConsultants(data.data);
-        } else {
-          console.error('Failed to fetch consultants:', data.message || 'Unknown error');
-          setFreelancers([]);
-          //   setFilteredConsultants([]);
-        }
-      } catch (error) {
-        console.error('Error fetching consultants:', error);
-        setFreelancers([]);
-        //  setFilteredConsultants([]);
-      } finally {
-        setIsLoading(false);
+      const token = localStorage.getItem('adminToken');
+      if (!token) {
+        console.warn('No admin token found');
+        return;
       }
-    };
+      const currentRange = getDateRangeForPeriod(selectedPeriod, customDateRange);
+      const startDate = new Date(currentRange.from).toISOString().split('T')[0];
+      const endDate = new Date(currentRange.to).toISOString().split('T')[0];
+      const response = await fetch(`${baseUrl}/api/admin/consultants?vsub=0&startdate=${startDate}&enddate=${endDate}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      });
 
+      const data = await response.json();
+
+      if (response.ok && data.success && Array.isArray(data.data)) {
+        setFreelancers(data.data);
+        //setFilteredConsultants(data.data);
+      } else {
+        console.error('Failed to fetch consultants:', data.message || 'Unknown error');
+        setFreelancers([]);
+        //   setFilteredConsultants([]);
+      }
+    } catch (error) {
+      console.error('Error fetching consultants:', error);
+      setFreelancers([]);
+      //  setFilteredConsultants([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  useEffect(() => {
     fetchFreelancers();
   }, []);
 
@@ -332,7 +330,7 @@ export default function FreelancerDetailsPage() {
       filtered = filtered.filter(freelancer => freelancer.profile === profileFilter);
     }
 
-    console.log(filtered);
+
     // Apply date filter only if not showing default "this-month" or if custom range is set
     if (selectedPeriod !== 'this-month' || customDateRange.from || customDateRange.to) {
       const dateRange = getDateRangeForPeriod(selectedPeriod, customDateRange);
@@ -343,7 +341,10 @@ export default function FreelancerDetailsPage() {
   }, [freelancers, selectedPeriod, customDateRange, searchTerm, statusFilter, profileFilter]);
 
 
-
+  const handleActionComplete = () => {
+    // Refresh the data after an action is completed
+    fetchFreelancers();
+  };
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'active':

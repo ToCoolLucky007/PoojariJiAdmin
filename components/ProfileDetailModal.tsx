@@ -68,6 +68,7 @@ interface ProfileDetailModalProps {
     description?: string;
     showActions?: boolean;
     profileType?: 'consultant' | 'freelancer';
+    onActionComplete?: () => void; // New prop for refresh callback
 }
 
 export default function ProfileDetailModal({
@@ -79,11 +80,22 @@ export default function ProfileDetailModal({
     title = "Profile Details",
     description = "Detailed information about the profile",
     showActions = false,
-    profileType = 'consultant'
+    profileType = 'consultant',
+    onActionComplete
 }: ProfileDetailModalProps) {
     const [imageZoom, setImageZoom] = useState<string | null>(null);
 
     if (!profile) return null;
+
+    const handleStatusChange = async (consultantId: string, profileId: string, action: 'approve' | 'reject') => {
+        if (onStatusChange) {
+            await onStatusChange(consultantId, profileId, action);
+            // Call the refresh callback after the action is complete
+            if (onActionComplete) {
+                onActionComplete();
+            }
+        }
+    };
 
     const getStatusBadge = (status: string) => {
         switch (status) {
@@ -339,7 +351,7 @@ export default function ProfileDetailModal({
                                     </div>
                                 </div>
                             )}
-                            {profile.profile}
+
                             {/* Activity */}
                             <div className="bg-green-50 p-4 rounded-lg">
                                 <h4 className="font-medium text-gray-900 mb-2">Activity</h4>
@@ -385,7 +397,7 @@ export default function ProfileDetailModal({
                             <div className="flex justify-end space-x-3 pt-4 border-t">
                                 <Button
                                     variant="outline"
-                                    onClick={() => onStatusChange(profile.consultantid, profile.id, 'reject')}
+                                    onClick={() => handleStatusChange(profile.consultantid, profile.id, 'reject')}
                                     disabled={!!actionLoading}
                                     className="hover:bg-red-50 hover:border-red-200"
                                 >
@@ -397,7 +409,7 @@ export default function ProfileDetailModal({
                                     Reject
                                 </Button>
                                 <Button
-                                    onClick={() => onStatusChange(profile.consultantid, profile.id, 'approve')}
+                                    onClick={() => handleStatusChange(profile.consultantid, profile.id, 'approve')}
                                     disabled={!!actionLoading}
                                     className="bg-green-600 hover:bg-green-700 text-white"
                                 >
