@@ -54,7 +54,7 @@ interface Freelancer {
   joinedDate: string;
   lastActive: string;
   status: 'active' | 'inactive';
-  profile: 'approved' | 'pending' | 'rejected';
+  profile: 'approved' | 'pending' | 'rejected' | 'not submitted';
   bio: string;
   profileCompleted: boolean;
   languages: string[];
@@ -355,8 +355,8 @@ export default function FreelancerDetailsPage() {
     }
   };
 
-  const getProfileBadge = (profile: string) => {
-    switch (profile) {
+  const getProfileBadge = (profileStatus: string) => {
+    switch (profileStatus) {
       case 'approved':
         return <Badge className="bg-green-100 text-green-800 hover:bg-green-100">
           <CheckCircle className="w-3 h-3 mr-1" />
@@ -367,10 +367,15 @@ export default function FreelancerDetailsPage() {
           <XCircle className="w-3 h-3 mr-1" />
           Rejected
         </Badge>;
-      default:
+      case 'pending':
         return <Badge variant="outline" className="bg-orange-50 text-orange-700 border-orange-200">
           <Clock className="w-3 h-3 mr-1" />
           Pending
+        </Badge>;
+      default:
+        return <Badge variant="outline" className="bg-orange-50 text-orange-700 border-orange-200">
+          <Clock className="w-3 h-3 mr-1" />
+          Not Submitted
         </Badge>;
     }
   };

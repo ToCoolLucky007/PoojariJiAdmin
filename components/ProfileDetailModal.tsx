@@ -168,10 +168,10 @@ export default function ProfileDetailModal({
                                     <p className="text-sm text-gray-500 mb-3">Experience: {profile.experience}</p>
                                 )}
                                 <div className="flex items-center space-x-2">
-                                    <Badge variant="outline" className="bg-blue-50 text-blue-700">
+                                    {/* <Badge variant="outline" className="bg-blue-50 text-blue-700">
                                         <User className="w-3 h-3 mr-1" />
                                         {profileType === 'consultant' ? 'Spiritual Consultant' : 'Freelancer'}
-                                    </Badge>
+                                    </Badge> */}
                                     {getStatusBadge(profile.status)}
                                 </div>
                             </div>
