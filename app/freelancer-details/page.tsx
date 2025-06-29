@@ -313,11 +313,13 @@ export default function FreelancerDetailsPage() {
     // Apply search filter first
     if (searchTerm) {
       filtered = filtered.filter(freelancer =>
-        freelancer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        freelancer.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        freelancer.languages.some(lang => lang.toLowerCase().includes(searchTerm.toLowerCase())) ||
-        freelancer.rituals.some(ritual => ritual.toLowerCase().includes(searchTerm.toLowerCase()))
+        (freelancer.name?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+        (freelancer.email?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+        (freelancer.languages || []).some(lang => (lang?.toLowerCase() || '').includes(searchTerm.toLowerCase())) ||
+        (freelancer.rituals || []).some(ritual => (ritual?.toLowerCase() || '').includes(searchTerm.toLowerCase()))
       );
+
+
     }
 
     // Apply status filter
@@ -545,7 +547,7 @@ export default function FreelancerDetailsPage() {
                     <option value="all">All Status</option>
                     <option value="active">Active</option>
                     <option value="inactive">Inactive</option>
-                    <option value="pending">Pending</option>
+
                   </select>
                 </div>
                 <div>
@@ -560,6 +562,7 @@ export default function FreelancerDetailsPage() {
                     <option value="approved">Approved</option>
                     <option value="pending">Pending</option>
                     <option value="rejected">Rejected</option>
+                    <option value="not submitted"> not submitted</option>
                   </select>
                 </div>
               </div>

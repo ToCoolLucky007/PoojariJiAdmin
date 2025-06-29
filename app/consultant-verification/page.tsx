@@ -131,7 +131,7 @@ export default function ConsultantVerificationPage() {
   const [profileFilter, setProfileFilter] = useState<string>('all');
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [actionResult, setActionResult] = useState<{ type: 'success' | 'error', message: string } | null>(null);
-  const [imageZoom, setImageZoom] = useState<string | null>(null);
+
 
   const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
 
@@ -183,8 +183,8 @@ export default function ConsultantVerificationPage() {
 
     if (searchTerm) {
       filtered = filtered.filter(consultant =>
-        consultant.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        consultant.email.toLowerCase().includes(searchTerm.toLowerCase())
+        (consultant?.name?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+        (consultant?.email?.toLowerCase() || '').includes(searchTerm.toLowerCase())
       );
     }
 
@@ -234,7 +234,7 @@ export default function ConsultantVerificationPage() {
       setConsultants(prev =>
         prev.map(consultant =>
           consultant.id === consultantId
-            ? { ...consultant, status: newProfile as 'approved' | 'rejected' }
+            ? { ...consultant, profile: newProfile as 'approved' | 'rejected' }
             : consultant
         )
       );
@@ -425,6 +425,7 @@ export default function ConsultantVerificationPage() {
             description="Review the consultant's information and make a decision"
             showActions={true}
             profileType="consultant"
+            onActionComplete={handleActionComplete}
           />
         </div>
       </AdminLayout>

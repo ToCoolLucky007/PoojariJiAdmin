@@ -89,10 +89,14 @@ export default function ProfileDetailModal({
 
     const handleStatusChange = async (consultantId: string, profileId: string, action: 'approve' | 'reject') => {
         if (onStatusChange) {
-            await onStatusChange(consultantId, profileId, action);
-            // Call the refresh callback after the action is complete
-            if (onActionComplete) {
-                onActionComplete();
+            try {
+                await onStatusChange(consultantId, profileId, action);
+                // Call the refresh callback after the action is complete
+                if (onActionComplete) {
+                    onActionComplete();
+                }
+            } catch (error) {
+                console.error('Error in status change:', error);
             }
         }
     };
