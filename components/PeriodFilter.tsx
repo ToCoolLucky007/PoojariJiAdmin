@@ -39,7 +39,7 @@ const periodOptions: { value: TimePeriod; label: string }[] = [
     { value: 'this-week', label: 'This Week' },
     { value: 'last-week', label: 'Last Week' },
     { value: 'this-month', label: 'This Month' },
-    { value: 'last-month', label: 'Last Month' },
+
     { value: 'custom', label: 'Custom Range' },
 ];
 

@@ -332,29 +332,17 @@ export default function FreelancerDetailsPage() {
       filtered = filtered.filter(freelancer => freelancer.profile === profileFilter);
     }
 
-    // Apply date filter - ALWAYS apply the date filter based on selected period
-    const dateRange = getDateRangeForPeriod(selectedPeriod, customDateRange);
-    filtered = filterDataByDateRange(filtered, 'joinedDate', dateRange);
+    console.log(filtered);
+    // Apply date filter only if not showing default "this-month" or if custom range is set
+    if (selectedPeriod !== 'this-month' || customDateRange.from || customDateRange.to) {
+      const dateRange = getDateRangeForPeriod(selectedPeriod, customDateRange);
 
+      filtered = filterDataByDateRange(filtered, 'joinedDate', dateRange);
+    }
     return filtered;
   }, [freelancers, selectedPeriod, customDateRange, searchTerm, statusFilter, profileFilter]);
 
-  // Calculate period comparison
-  const periodComparison = useMemo(() => {
-    const currentRange = getDateRangeForPeriod(selectedPeriod, customDateRange);
-    const currentData = filterDataByDateRange(freelancers, 'joinedDate', currentRange);
 
-    // Get previous period data for comparison
-    let previousPeriod: TimePeriod = 'last-month';
-    if (selectedPeriod === 'today') previousPeriod = 'yesterday';
-    else if (selectedPeriod === 'this-week') previousPeriod = 'last-week';
-    else if (selectedPeriod === 'this-month') previousPeriod = 'last-month';
-
-    const previousRange = getDateRangeForPeriod(previousPeriod);
-    const previousData = filterDataByDateRange(freelancers, 'joinedDate', previousRange);
-
-    return calculatePeriodComparison(currentData, previousData);
-  }, [freelancers, selectedPeriod, customDateRange]);
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -442,7 +430,7 @@ export default function FreelancerDetailsPage() {
             onPeriodChange={setSelectedPeriod}
             customDateRange={customDateRange}
             onCustomDateRangeChange={(from, to) => setCustomDateRange({ from, to })}
-            comparison={periodComparison}
+            showComparison={false}
             title="Filter Freelancers by Join Date"
             description="View freelancers who joined during the selected period"
           />
