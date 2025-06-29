@@ -15,7 +15,7 @@ import {
   Eye,
   Calendar,
   ShoppingCart,
-  DollarSign,
+  IndianRupee,
   User,
   Clock,
   CheckCircle,
@@ -46,89 +46,107 @@ interface Order {
   serviceName: string;
   category: string;
   orderAmount: number;
+  servicefee: number;
   orderDate: string;
   deliveryDate: string;
   status: 'pending' | 'in-progress' | 'completed' | 'cancelled';
   paymentStatus: 'paid' | 'pending' | 'refunded';
+
   items: OrderItem[];
 }
 
-// Mock data
-const mockOrders: Order[] = [
-  {
-    id: '1',
-    orderId: 'ORD-2024-001',
-    customerName: 'Jennifer Smith',
-    customerEmail: 'jennifer.smith@email.com',
-    freelancerName: 'Alex Johnson',
-    serviceName: 'E-commerce Website Development',
-    category: 'Web Development',
-    orderAmount: 2500,
-    orderDate: '2025-06-15',
-    deliveryDate: '2024-02-15',
-    status: 'in-progress',
-    paymentStatus: 'paid',
-    items: [
-      { price: 1200.00, itemid: 1, itemname: 'Frontend Development', quantity: 1, bookingid: 73, measurement: 'Project' },
-      { price: 800.00, itemid: 2, itemname: 'Backend API', quantity: 1, bookingid: 73, measurement: 'Project' },
-      { price: 300.00, itemid: 3, itemname: 'Database Setup', quantity: 1, bookingid: 73, measurement: 'Project' },
-      { price: 200.00, itemid: 4, itemname: 'Testing & QA', quantity: 1, bookingid: 73, measurement: 'Hours' }
-    ]
-  },
-  {
-    id: '2',
-    orderId: 'ORD-2024-002',
-    customerName: 'Robert Johnson',
-    customerEmail: 'robert.j@email.com',
-    freelancerName: 'Sarah Chen',
-    serviceName: 'Brand Identity Design',
-    category: 'Design',
-    orderAmount: 800,
-    orderDate: '2025-06-14',
-    deliveryDate: '2025-06-28',
-    status: 'completed',
-    paymentStatus: 'paid',
-    items: [
-      { price: 400.00, itemid: 5, itemname: 'Logo Design', quantity: 1, bookingid: 74, measurement: 'Design' },
-      { price: 150.00, itemid: 6, itemname: 'Business Card Design', quantity: 2, bookingid: 74, measurement: 'Design' },
-      { price: 250.00, itemid: 7, itemname: 'Brand Guidelines', quantity: 1, bookingid: 74, measurement: 'Document' }
-    ]
-  },
-  {
-    id: '3',
-    orderId: 'ORD-2024-003',
-    customerName: 'Lisa Chen',
-    customerEmail: 'lisa.chen@email.com',
-    freelancerName: 'Michael Rodriguez',
-    serviceName: 'SEO Optimization Campaign',
-    category: 'Digital Marketing',
-    orderAmount: 1200,
-    orderDate: '2025-06-13',
-    deliveryDate: '2024-02-13',
-    status: 'in-progress',
-    paymentStatus: 'paid',
-    items: [
-      { price: 300.00, itemid: 8, itemname: 'Keyword Research', quantity: 1, bookingid: 75, measurement: 'Report' },
-      { price: 500.00, itemid: 9, itemname: 'On-page Optimization', quantity: 10, bookingid: 75, measurement: 'Pages' },
-      { price: 400.00, itemid: 10, itemname: 'Content Strategy', quantity: 3, bookingid: 75, measurement: 'Months' }
-    ]
-  },
-  {
-    id: '4',
-    orderId: 'ORD-2024-004',
-    customerName: 'David Wilson',
-    customerEmail: 'david.wilson@email.com',
-    freelancerName: 'Emma Wilson',
-    serviceName: 'Data Analysis Dashboard',
-    category: 'Data Science',
-    orderAmount: 1800,
-    orderDate: '2025-06-12',
-    deliveryDate: '2025-06-26',
-    status: 'pending',
-    paymentStatus: 'pending',
-    items: []
-  }
-];
+// // Mock data
+// const mockOrders: Order[] = [
+//   {
+//     id: '1',
+//     orderId: 'ORD-2024-001',
+//     customerName: 'Jennifer Smith',
+//     customerEmail: 'jennifer.smith@email.com',
+//     freelancerName: 'Alex Johnson',
+//     serviceName: 'E-commerce Website Development',
+//     category: 'Web Development',
+//     orderAmount: 2500,
+//     orderDate: '2025-06-15',
+//     deliveryDate: '2024-02-15',
+//     status: 'in-progress',
+//     paymentStatus: 'paid',
+//     description: 'Complete e-commerce website with payment integration and admin panel',
+//     requirements: ['Responsive design', 'Payment gateway integration', 'Admin dashboard', 'Product catalog'],
+//     deliverables: ['Source code', 'Documentation', 'Deployment guide', '30 days support'],
+//     items: [
+//       { price: 1200.00, itemid: 1, itemname: 'Frontend Development', quantity: 1, bookingid: 73, measurement: 'Project' },
+//       { price: 800.00, itemid: 2, itemname: 'Backend API', quantity: 1, bookingid: 73, measurement: 'Project' },
+//       { price: 300.00, itemid: 3, itemname: 'Database Setup', quantity: 1, bookingid: 73, measurement: 'Project' },
+//       { price: 200.00, itemid: 4, itemname: 'Testing & QA', quantity: 1, bookingid: 73, measurement: 'Hours' }
+//     ]
+//   },
+//   {
+//     id: '2',
+//     orderId: 'ORD-2024-002',
+//     customerName: 'Robert Johnson',
+//     customerEmail: 'robert.j@email.com',
+//     freelancerName: 'Sarah Chen',
+//     serviceName: 'Brand Identity Design',
+//     category: 'Design',
+//     orderAmount: 800,
+//     orderDate: '2025-06-14',
+//     deliveryDate: '2025-06-28',
+//     status: 'completed',
+//     paymentStatus: 'paid',
+//     description: 'Complete brand identity package including logo, business cards, and brand guidelines',
+//     requirements: ['Logo design', 'Business card design', 'Brand guidelines', 'Color palette'],
+//     deliverables: ['Logo files (AI, PNG, SVG)', 'Business card design', 'Brand guideline document', 'Color palette'],
+//     items: [
+//       { price: 400.00, itemid: 5, itemname: 'Logo Design', quantity: 1, bookingid: 74, measurement: 'Design' },
+//       { price: 150.00, itemid: 6, itemname: 'Business Card Design', quantity: 2, bookingid: 74, measurement: 'Design' },
+//       { price: 250.00, itemid: 7, itemname: 'Brand Guidelines', quantity: 1, bookingid: 74, measurement: 'Document' }
+//     ]
+//   },
+//   {
+//     id: '3',
+//     orderId: 'ORD-2024-003',
+//     customerName: 'Lisa Chen',
+//     customerEmail: 'lisa.chen@email.com',
+//     freelancerName: 'Michael Rodriguez',
+//     serviceName: 'SEO Optimization Campaign',
+//     category: 'Digital Marketing',
+//     orderAmount: 1200,
+//     orderDate: '2025-06-13',
+//     deliveryDate: '2024-02-13',
+//     status: 'in-progress',
+//     paymentStatus: 'paid',
+//     description: '3-month SEO campaign to improve website ranking and organic traffic',
+//     requirements: ['Keyword research', 'On-page optimization', 'Content strategy', 'Monthly reports'],
+//     deliverables: ['SEO audit report', 'Optimized content', 'Backlink strategy', 'Monthly performance reports'],
+//     items: [
+//       { price: 300.00, itemid: 8, itemname: 'Keyword Research', quantity: 1, bookingid: 75, measurement: 'Report' },
+//       { price: 500.00, itemid: 9, itemname: 'On-page Optimization', quantity: 10, bookingid: 75, measurement: 'Pages' },
+//       { price: 400.00, itemid: 10, itemname: 'Content Strategy', quantity: 3, bookingid: 75, measurement: 'Months' }
+//     ]
+//   },
+//   {
+//     id: '4',
+//     orderId: 'ORD-2024-004',
+//     customerName: 'David Wilson',
+//     customerEmail: 'david.wilson@email.com',
+//     freelancerName: 'Emma Wilson',
+//     serviceName: 'Data Analysis Dashboard',
+//     category: 'Data Science',
+//     orderAmount: 1800,
+//     orderDate: '2025-06-12',
+//     deliveryDate: '2025-06-26',
+//     status: 'pending',
+//     paymentStatus: 'pending',
+//     description: 'Interactive dashboard for sales data analysis with predictive insights',
+//     requirements: ['Data visualization', 'Interactive charts', 'Predictive analytics', 'Export functionality'],
+//     deliverables: ['Dashboard application', 'Source code', 'User manual', 'Training session'],
+//     items: [
+//       { price: 600.00, itemid: 11, itemname: 'Data Visualization', quantity: 5, bookingid: 76, measurement: 'Charts' },
+//       { price: 800.00, itemid: 12, itemname: 'Predictive Analytics', quantity: 1, bookingid: 76, measurement: 'Model' },
+//       { price: 400.00, itemid: 13, itemname: 'Dashboard Development', quantity: 1, bookingid: 76, measurement: 'Project' }
+//     ]
+//   }
+// ];
 
 export default function OrderDetailsPage() {
   const [orders, setOrders] = useState<Order[]>([]);
@@ -140,15 +158,45 @@ export default function OrderDetailsPage() {
   // 🔥 PERIOD FILTERING STATE - THIS CONTROLS THE TIME PERIOD
   const [selectedPeriod, setSelectedPeriod] = useState<TimePeriod>('this-month');
   const [customDateRange, setCustomDateRange] = useState<{ from?: Date; to?: Date }>({});
+  const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
 
   useEffect(() => {
     const fetchOrders = async () => {
-      setIsLoading(true);
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      setOrders(mockOrders);
-      setIsLoading(false);
-    };
+      try {
+        setIsLoading(true);
 
+        const token = localStorage.getItem('adminToken');
+        if (!token) {
+          console.warn('No admin token found');
+          return;
+        }
+        const [startDate, endDate] = [new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], new Date().toISOString().split('T')[0]];
+        const response = await fetch(`${baseUrl}/api/admin/orders?startdate=${startDate}&enddate=${endDate}`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          }
+        });
+
+        const data = await response.json();
+
+        if (response.ok && data.success && Array.isArray(data.data)) {
+          setOrders(data.data);
+
+        } else {
+          console.error('Failed to fetch consultants:', data.message || 'Unknown error');
+          setOrders([]);
+
+        }
+      } catch (error) {
+        console.error('Error fetching consultants:', error);
+        setOrders([]);
+
+      } finally {
+        setIsLoading(false);
+      }
+    };
     fetchOrders();
   }, []);
 
@@ -162,11 +210,18 @@ export default function OrderDetailsPage() {
 
     // Filter by search term
     if (searchTerm) {
+      const search = searchTerm.toLowerCase();
+
       filtered = filtered.filter(order =>
-        order.orderId.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        order.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        order.serviceName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        order.category.toLowerCase().includes(searchTerm.toLowerCase())
+        // orderId might be a number → stringify first
+        (order.orderId !== null && order.orderId !== undefined
+          ? String(order.orderId).toLowerCase()
+          : ''
+        ).includes(search) ||
+
+        (order.customerName?.toLowerCase() || '').includes(search) ||
+        (order.serviceName?.toLowerCase() || '').includes(search) ||
+        (order.category?.toLowerCase() || '').includes(search)
       );
     }
 
@@ -195,32 +250,21 @@ export default function OrderDetailsPage() {
     return calculatePeriodComparison(currentData, previousData);
   }, [orders, selectedPeriod, customDateRange]);
 
-  // Calculate revenue comparison
-  const revenueComparison = useMemo(() => {
-    const currentRange = getDateRangeForPeriod(selectedPeriod, customDateRange);
-    const currentData = filterDataByDateRange(orders, 'orderDate', currentRange);
-
-    let previousPeriod: TimePeriod = 'last-month';
-    if (selectedPeriod === 'today') previousPeriod = 'yesterday';
-    else if (selectedPeriod === 'this-week') previousPeriod = 'last-week';
-    else if (selectedPeriod === 'this-month') previousPeriod = 'last-month';
-
-    const previousRange = getDateRangeForPeriod(previousPeriod);
-    const previousData = filterDataByDateRange(orders, 'orderDate', previousRange);
-
-    return calculatePeriodComparison(currentData, previousData, 'orderAmount');
-  }, [orders, selectedPeriod, customDateRange]);
-
   const getStatusBadge = (status: string) => {
+
     switch (status) {
       case 'completed':
         return <Badge className="bg-green-100 text-green-800 hover:bg-green-100"><CheckCircle className="w-3 h-3 mr-1" />Completed</Badge>;
-      case 'in-progress':
+      case 'ongoing':
         return <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-100"><Clock className="w-3 h-3 mr-1" />In Progress</Badge>;
+      case 'accepted':
+        return <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-100"><Clock className="w-3 h-3 mr-1" />Accepted</Badge>;
       case 'cancelled':
         return <Badge variant="destructive"><AlertCircle className="w-3 h-3 mr-1" />Cancelled</Badge>;
+      case 'rejected':
+        return <Badge variant="destructive"><AlertCircle className="w-3 h-3 mr-1" />Rejected</Badge>;
       default:
-        return <Badge variant="secondary"><Package className="w-3 h-3 mr-1" />Pending</Badge>;
+        return <Badge variant="secondary"><Package className="w-3 h-3 mr-1" />New</Badge>;
     }
   };
 
@@ -231,7 +275,7 @@ export default function OrderDetailsPage() {
       case 'refunded':
         return <Badge className="bg-orange-100 text-orange-800 hover:bg-orange-100">Refunded</Badge>;
       default:
-        return <Badge variant="outline">Pending</Badge>;
+        return <Badge variant="outline">Unpaid</Badge>;
     }
   };
 
@@ -284,7 +328,7 @@ export default function OrderDetailsPage() {
             onPeriodChange={setSelectedPeriod}
             customDateRange={customDateRange}
             onCustomDateRangeChange={(from, to) => setCustomDateRange({ from, to })}
-            comparison={periodComparison}
+            showComparison={false}
             title="Filter Orders by Date"
             description="View orders placed during the selected period"
           />
@@ -327,58 +371,21 @@ export default function OrderDetailsPage() {
             <Card className="bg-white/80 backdrop-blur-xl border-0 shadow-xl">
               <CardContent className="p-4">
                 <div className="flex items-center space-x-2">
-                  <DollarSign className="h-8 w-8 text-green-600" />
+                  <IndianRupee className="h-8 w-8 text-green-600" />
                   <div>
-                    <p className="text-2xl font-bold text-gray-900">${filteredOrders.reduce((sum, o) => sum + o.orderAmount, 0).toLocaleString()}</p>
+                    <p className="text-2xl font-bold text-gray-900">₹
+
+                      {filteredOrders.reduce((sum, o) => sum + (Number(o.orderAmount) || 0), 0).toLocaleString('en-IN', {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2
+                      })}
+                    </p>
                     <p className="text-sm text-gray-500">Total Value</p>
                   </div>
                 </div>
               </CardContent>
             </Card>
           </div>
-
-          {/* Revenue Comparison Card */}
-          {revenueComparison && (
-            <Card className="bg-gradient-to-r from-green-50 to-emerald-50 border-0 shadow-xl">
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center space-x-2">
-                    <DollarSign className="h-6 w-6 text-green-600" />
-                    <span className="text-sm font-medium text-gray-700">Revenue Comparison</span>
-                  </div>
-                  <Badge
-                    variant="outline"
-                    className={`${revenueComparison.trend === 'up' ? 'text-green-600 bg-green-100' :
-                      revenueComparison.trend === 'down' ? 'text-red-600 bg-red-100' :
-                        'text-gray-600 bg-gray-100'
-                      } border-0`}
-                  >
-                    {revenueComparison.trend === 'up' ? '↗️' : revenueComparison.trend === 'down' ? '↘️' : '→'}
-                    <span className="ml-1">
-                      {revenueComparison.percentage >= 0 ? '+' : ''}{revenueComparison.percentage.toFixed(1)}%
-                    </span>
-                  </Badge>
-                </div>
-                <div className="grid grid-cols-3 gap-4 text-center">
-                  <div>
-                    <div className="text-lg font-semibold text-gray-900">${revenueComparison.current.toLocaleString()}</div>
-                    <div className="text-xs text-gray-500">Current Period</div>
-                  </div>
-                  <div>
-                    <div className="text-lg font-semibold text-gray-600">${revenueComparison.previous.toLocaleString()}</div>
-                    <div className="text-xs text-gray-500">Previous Period</div>
-                  </div>
-                  <div>
-                    <div className={`text-lg font-semibold ${revenueComparison.change >= 0 ? 'text-green-600' : 'text-red-600'
-                      }`}>
-                      {revenueComparison.change >= 0 ? '+' : ''}${revenueComparison.change.toLocaleString()}
-                    </div>
-                    <div className="text-xs text-gray-500">Change</div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          )}
 
           <Card className="bg-white/80 backdrop-blur-xl border-0 shadow-xl">
             <CardHeader>
@@ -409,10 +416,13 @@ export default function OrderDetailsPage() {
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     <option value="all">All Status</option>
-                    <option value="pending">Pending</option>
-                    <option value="in-progress">In Progress</option>
-                    <option value="completed">Completed</option>
+                    <option value="new">New</option>
+                    <option value="accepted">Accepted</option>
+                    <option value="ongoing">In Progress</option>
                     <option value="cancelled">Cancelled</option>
+                    <option value="rejected">Rejected</option>
+                    <option value="completed">Completed</option>
+
                   </select>
                 </div>
               </div>
@@ -439,8 +449,8 @@ export default function OrderDetailsPage() {
                             Ordered: {new Date(order.orderDate).toLocaleDateString()}
                           </p>
                           <p className="text-sm font-medium text-green-600">
-                            <DollarSign className="w-3 h-3 inline mr-1" />
-                            ${order.orderAmount.toLocaleString()}
+                            <IndianRupee className="w-3 h-3 inline mr-1" />
+                            ₹{order.orderAmount.toLocaleString()}
                           </p>
                           <p className="text-sm text-gray-500">
                             <ShoppingBag className="w-3 h-3 inline mr-1" />
@@ -503,16 +513,17 @@ export default function OrderDetailsPage() {
                           <span className="font-mono font-medium">{selectedOrder.orderId}</span>
                         </div>
                         <div className="flex justify-between">
+                          <span className="text-gray-500">Category:</span>
+                          <span className="font-medium">{selectedOrder.category}</span>
+                        </div>
+                        <div className="flex justify-between">
                           <span className="text-gray-500">Service:</span>
                           <span className="font-medium">{selectedOrder.serviceName}</span>
                         </div>
-                        <div className="flex justify-between">
-                          <span className="text-gray-500">Category:</span>
-                          <Badge variant="outline" className="text-xs">{selectedOrder.category}</Badge>
-                        </div>
+
                         <div className="flex justify-between">
                           <span className="text-gray-500">Amount:</span>
-                          <span className="font-medium text-green-600">${selectedOrder.orderAmount.toLocaleString()}</span>
+                          <span className="font-medium text-green-600">₹{selectedOrder.orderAmount.toLocaleString()}</span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-gray-500">Order Date:</span>
@@ -540,11 +551,19 @@ export default function OrderDetailsPage() {
                           <span className="text-gray-500">Freelancer:</span>
                           <span className="font-medium">{selectedOrder.freelancerName}</span>
                         </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-500">Service Amount:</span>
+                          <span className="font-medium text-green-600">₹{selectedOrder.servicefee}</span>
+                        </div>
+
                       </div>
                     </div>
                   </div>
 
-
+                  <div>
+                    <h4 className="font-medium text-gray-900 mb-2">Description</h4>
+                    <p className="text-gray-700 text-sm bg-gray-50 p-3 rounded-lg">{selectedOrder.description}</p>
+                  </div>
 
                   {/* Order Items Section */}
                   <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
@@ -575,7 +594,7 @@ export default function OrderDetailsPage() {
                               </div>
                             </div>
                             <div className="text-right">
-                              <div className="text-lg font-bold text-green-600">${item.price.toFixed(2)}</div>
+                              <div className="text-lg font-bold text-green-600">₹{item.price.toFixed(2)}</div>
                               <div className="text-xs text-gray-500">per {item.measurement}</div>
                             </div>
                           </div>
@@ -586,7 +605,7 @@ export default function OrderDetailsPage() {
                             </div>
                             <div className="flex items-center space-x-2">
                               <span className="text-sm text-gray-600">Subtotal:</span>
-                              <span className="font-semibold text-gray-900">${(item.price * item.quantity).toFixed(2)}</span>
+                              <span className="font-semibold text-gray-900">₹{(item.price * item.quantity).toFixed(2)}</span>
                             </div>
                           </div>
                         </div>
@@ -598,7 +617,7 @@ export default function OrderDetailsPage() {
                       <div className="flex justify-between items-center">
                         <span className="text-lg font-semibold text-gray-900">Order Total:</span>
                         <span className="text-2xl font-bold text-green-600">
-                          ${selectedOrder.items.reduce((total, item) => total + (item.price * item.quantity), 0).toFixed(2)}
+                          ₹{selectedOrder.items.reduce((total, item) => total + (item.price * item.quantity), 0).toFixed(2)}
                         </span>
                       </div>
                       <div className="text-xs text-gray-500 mt-1">
