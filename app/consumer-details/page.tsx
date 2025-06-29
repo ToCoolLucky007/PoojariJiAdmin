@@ -1,8 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import AdminLayout from '@/components/AdminLayout';
 import ProtectedRoute from '@/components/ProtectedRoute';
+import PeriodFilter from '@/components/PeriodFilter';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -18,11 +19,12 @@ import {
   Phone,
   MapPin,
   ShoppingCart,
-  DollarSign,
+  IndianRupee,
   Clock,
   TrendingUp,
   Users
 } from 'lucide-react';
+import { TimePeriod, getDateRangeForPeriod, filterDataByDateRange, calculatePeriodComparison } from '@/lib/date-utils';
 
 interface Consumer {
   id: string;
@@ -37,8 +39,7 @@ interface Consumer {
   totalOrders: number;
   totalSpent: number;
   averageOrderValue: number;
-  preferredCategories: string[];
-  accountType: 'individual' | 'business';
+
 }
 
 // Mock data
@@ -50,14 +51,13 @@ const mockConsumers: Consumer[] = [
     phone: '+1-555-0201',
     location: 'Los Angeles, USA',
     profileImage: 'https://images.pexels.com/photos/3785077/pexels-photo-3785077.jpeg?auto=compress&cs=tinysrgb&w=300',
-    joinedDate: '2024-01-15',
-    lastActive: '2024-01-16',
+    joinedDate: '2025-06-15',
+    lastActive: '2025-06-16',
     status: 'active',
     totalOrders: 12,
     totalSpent: 3450,
     averageOrderValue: 287.5,
-    preferredCategories: ['Web Development', 'Design'],
-    accountType: 'business'
+
   },
   {
     id: '2',
@@ -66,14 +66,13 @@ const mockConsumers: Consumer[] = [
     phone: '+1-555-0202',
     location: 'Chicago, USA',
     profileImage: 'https://images.pexels.com/photos/2379004/pexels-photo-2379004.jpeg?auto=compress&cs=tinysrgb&w=300',
-    joinedDate: '2024-01-14',
-    lastActive: '2024-01-16',
+    joinedDate: '2025-06-14',
+    lastActive: '2025-06-16',
     status: 'active',
     totalOrders: 8,
     totalSpent: 1890,
     averageOrderValue: 236.25,
-    preferredCategories: ['Digital Marketing', 'Content Writing'],
-    accountType: 'individual'
+
   },
   {
     id: '3',
@@ -82,14 +81,13 @@ const mockConsumers: Consumer[] = [
     phone: '+1-555-0203',
     location: 'Boston, USA',
     profileImage: 'https://images.pexels.com/photos/3763188/pexels-photo-3763188.jpeg?auto=compress&cs=tinysrgb&w=300',
-    joinedDate: '2024-01-13',
-    lastActive: '2024-01-15',
+    joinedDate: '2025-06-13',
+    lastActive: '2025-06-15',
     status: 'active',
     totalOrders: 15,
     totalSpent: 4200,
     averageOrderValue: 280,
-    preferredCategories: ['Mobile App Development', 'UI/UX Design'],
-    accountType: 'business'
+
   },
   {
     id: '4',
@@ -98,54 +96,109 @@ const mockConsumers: Consumer[] = [
     phone: '+1-555-0204',
     location: 'Miami, USA',
     profileImage: 'https://images.pexels.com/photos/2182970/pexels-photo-2182970.jpeg?auto=compress&cs=tinysrgb&w=300',
-    joinedDate: '2024-01-12',
-    lastActive: '2024-01-14',
+    joinedDate: '2025-06-12',
+    lastActive: '2025-06-14',
     status: 'inactive',
     totalOrders: 5,
     totalSpent: 950,
     averageOrderValue: 190,
-    preferredCategories: ['SEO', 'Social Media Marketing'],
-    accountType: 'individual'
+
   }
 ];
 
 export default function ConsumerDetailsPage() {
   const [consumers, setConsumers] = useState<Consumer[]>([]);
-  const [filteredConsumers, setFilteredConsumers] = useState<Consumer[]>([]);
   const [selectedConsumer, setSelectedConsumer] = useState<Consumer | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
 
+  // 🔥 PERIOD FILTERING STATE - THIS CONTROLS THE TIME PERIOD
+  const [selectedPeriod, setSelectedPeriod] = useState<TimePeriod>('this-month');
+  const [customDateRange, setCustomDateRange] = useState<{ from?: Date; to?: Date }>({});
+  const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
+
   useEffect(() => {
     const fetchConsumers = async () => {
-      setIsLoading(true);
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      setConsumers(mockConsumers);
-      setFilteredConsumers(mockConsumers);
-      setIsLoading(false);
+      try {
+        setIsLoading(true);
+
+        const token = localStorage.getItem('adminToken');
+        if (!token) {
+          console.warn('No admin token found');
+          return;
+        }
+        const [startDate, endDate] = [new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], new Date().toISOString().split('T')[0]];
+        const response = await fetch(`${baseUrl}/api/admin/consumers?startdate=${startDate}&enddate=${endDate}`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          }
+        });
+
+        const data = await response.json();
+
+        if (response.ok && data.success && Array.isArray(data.data)) {
+          setConsumers(data.data);
+
+        } else {
+          console.error('Failed to fetch consultants:', data.message || 'Unknown error');
+          setConsumers([]);
+
+        }
+      } catch (error) {
+        console.error('Error fetching consultants:', error);
+        setConsumers([]);
+
+      } finally {
+        setIsLoading(false);
+      }
     };
 
     fetchConsumers();
   }, []);
 
-  useEffect(() => {
+  // 🔥 FILTER DATA BY PERIOD AND OTHER CRITERIA - THIS IS WHERE THE MAGIC HAPPENS
+  const filteredConsumers = useMemo(() => {
     let filtered = consumers;
 
+    // 🔥 FILTER BY DATE PERIOD - FILTERS CONSUMERS BY THEIR JOIN DATE
+    const dateRange = getDateRangeForPeriod(selectedPeriod, customDateRange);
+    filtered = filterDataByDateRange(filtered, 'joinedDate', dateRange);
+
+    // Filter by search term
     if (searchTerm) {
       filtered = filtered.filter(consumer =>
         consumer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        consumer.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        consumer.preferredCategories.some(cat => cat.toLowerCase().includes(searchTerm.toLowerCase()))
+        consumer.email.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 
+    // Filter by status
     if (statusFilter !== 'all') {
       filtered = filtered.filter(consumer => consumer.status === statusFilter);
     }
 
-    setFilteredConsumers(filtered);
-  }, [searchTerm, statusFilter, consumers]);
+    return filtered;
+  }, [consumers, selectedPeriod, customDateRange, searchTerm, statusFilter]);
+
+  // 🔥 CALCULATE PERIOD COMPARISON - COMPARES CURRENT VS PREVIOUS PERIOD
+  const periodComparison = useMemo(() => {
+    const currentRange = getDateRangeForPeriod(selectedPeriod, customDateRange);
+    const currentData = filterDataByDateRange(consumers, 'joinedDate', currentRange);
+
+    // Get previous period data for comparison
+    let previousPeriod: TimePeriod = 'last-month';
+    if (selectedPeriod === 'today') previousPeriod = 'yesterday';
+    else if (selectedPeriod === 'this-week') previousPeriod = 'last-week';
+    else if (selectedPeriod === 'this-month') previousPeriod = 'last-month';
+
+    const previousRange = getDateRangeForPeriod(previousPeriod);
+    const previousData = filterDataByDateRange(consumers, 'joinedDate', previousRange);
+
+    return calculatePeriodComparison(currentData, previousData);
+  }, [consumers, selectedPeriod, customDateRange]);
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -158,11 +211,7 @@ export default function ConsumerDetailsPage() {
     }
   };
 
-  const getAccountTypeBadge = (type: string) => {
-    return type === 'business'
-      ? <Badge variant="outline" className="bg-blue-50 text-blue-700">Business</Badge>
-      : <Badge variant="outline" className="bg-gray-50 text-gray-700">Individual</Badge>;
-  };
+
 
   if (isLoading) {
     return (
@@ -207,6 +256,17 @@ export default function ConsumerDetailsPage() {
             </Badge>
           </div>
 
+          {/* 🔥 PERIOD FILTER COMPONENT - THIS IS THE UI FOR SELECTING TIME PERIODS */}
+          <PeriodFilter
+            selectedPeriod={selectedPeriod}
+            onPeriodChange={setSelectedPeriod}
+            customDateRange={customDateRange}
+            onCustomDateRangeChange={(from, to) => setCustomDateRange({ from, to })}
+            showComparison={false}
+            title="Filter Consumers by Join Date"
+            description="View consumers who joined during the selected period"
+          />
+
           {/* Stats Cards */}
           <div className="grid gap-4 md:grid-cols-4">
             <Card className="bg-white/80 backdrop-blur-xl border-0 shadow-xl">
@@ -214,7 +274,7 @@ export default function ConsumerDetailsPage() {
                 <div className="flex items-center space-x-2">
                   <UserCheck className="h-8 w-8 text-blue-600" />
                   <div>
-                    <p className="text-2xl font-bold text-gray-900">{consumers.length}</p>
+                    <p className="text-2xl font-bold text-gray-900">{filteredConsumers.length}</p>
                     <p className="text-sm text-gray-500">Total Consumers</p>
                   </div>
                 </div>
@@ -225,7 +285,7 @@ export default function ConsumerDetailsPage() {
                 <div className="flex items-center space-x-2">
                   <TrendingUp className="h-8 w-8 text-green-600" />
                   <div>
-                    <p className="text-2xl font-bold text-gray-900">{consumers.filter(c => c.status === 'active').length}</p>
+                    <p className="text-2xl font-bold text-gray-900">{filteredConsumers.filter(c => c.status === 'active').length}</p>
                     <p className="text-sm text-gray-500">Active</p>
                   </div>
                 </div>
@@ -236,7 +296,7 @@ export default function ConsumerDetailsPage() {
                 <div className="flex items-center space-x-2">
                   <ShoppingCart className="h-8 w-8 text-purple-600" />
                   <div>
-                    <p className="text-2xl font-bold text-gray-900">{consumers.reduce((sum, c) => sum + c.totalOrders, 0)}</p>
+                    <p className="text-2xl font-bold text-gray-900">{filteredConsumers.reduce((sum, c) => sum + c.totalOrders, 0)}</p>
                     <p className="text-sm text-gray-500">Total Orders</p>
                   </div>
                 </div>
@@ -245,9 +305,12 @@ export default function ConsumerDetailsPage() {
             <Card className="bg-white/80 backdrop-blur-xl border-0 shadow-xl">
               <CardContent className="p-4">
                 <div className="flex items-center space-x-2">
-                  <DollarSign className="h-8 w-8 text-green-600" />
+                  <IndianRupee className="h-8 w-8 text-green-600" />
                   <div>
-                    <p className="text-2xl font-bold text-gray-900">${consumers.reduce((sum, c) => sum + c.totalSpent, 0).toLocaleString()}</p>
+                    <p className="text-2xl font-bold text-gray-900">  {filteredConsumers.reduce((sum, c) => sum + (Number(c.totalSpent) || 0), 0).toLocaleString('en-IN', {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2
+                    })}</p>
                     <p className="text-sm text-gray-500">Total Revenue</p>
                   </div>
                 </div>
@@ -257,7 +320,7 @@ export default function ConsumerDetailsPage() {
 
           <Card className="bg-white/80 backdrop-blur-xl border-0 shadow-xl">
             <CardHeader>
-              <CardTitle>Filter Consumers</CardTitle>
+              <CardTitle>Additional Filters</CardTitle>
               <CardDescription>Search and filter consumer profiles</CardDescription>
             </CardHeader>
             <CardContent>
@@ -314,16 +377,9 @@ export default function ConsumerDetailsPage() {
                         <div className="flex items-center space-x-4 mt-1">
                           <span className="text-sm text-gray-500">{consumer.totalOrders} orders</span>
                           <span className="text-sm font-medium text-green-600">${consumer.totalSpent.toLocaleString()} spent</span>
-                          {getAccountTypeBadge(consumer.accountType)}
+
                         </div>
-                        <div className="flex flex-wrap gap-1 mt-2">
-                          {consumer.preferredCategories.slice(0, 2).map((category) => (
-                            <Badge key={category} variant="outline" className="text-xs">{category}</Badge>
-                          ))}
-                          {consumer.preferredCategories.length > 2 && (
-                            <Badge variant="outline" className="text-xs">+{consumer.preferredCategories.length - 2} more</Badge>
-                          )}
-                        </div>
+
                       </div>
                     </div>
                     <div className="flex items-center space-x-3">
@@ -348,7 +404,7 @@ export default function ConsumerDetailsPage() {
               <CardContent className="p-12 text-center">
                 <UserCheck className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                 <h3 className="text-lg font-medium text-gray-900 mb-2">No consumers found</h3>
-                <p className="text-gray-500">Try adjusting your search or filter criteria.</p>
+                <p className="text-gray-500">Try adjusting your search, filters, or time period.</p>
               </CardContent>
             </Card>
           )}
@@ -376,9 +432,7 @@ export default function ConsumerDetailsPage() {
                       <p className="text-gray-600">{selectedConsumer.email}</p>
                       <p className="text-gray-600">{selectedConsumer.phone}</p>
                       <p className="text-sm text-gray-500">{selectedConsumer.location}</p>
-                      <div className="mt-2">
-                        {getAccountTypeBadge(selectedConsumer.accountType)}
-                      </div>
+
                     </div>
                   </div>
 
@@ -396,7 +450,7 @@ export default function ConsumerDetailsPage() {
                         </div>
                         <div className="flex justify-between">
                           <span className="text-gray-500">Avg Order Value:</span>
-                          <span className="font-medium">${selectedConsumer.averageOrderValue.toFixed(2)}</span>
+                          <span className="font-medium"> ₹ {(Number(selectedConsumer.averageOrderValue) || 0).toFixed(2)}</span>
                         </div>
                       </div>
                     </div>
@@ -420,14 +474,7 @@ export default function ConsumerDetailsPage() {
                     </div>
                   </div>
 
-                  <div>
-                    <h4 className="font-medium text-gray-900 mb-2">Preferred Categories</h4>
-                    <div className="flex flex-wrap gap-2">
-                      {selectedConsumer.preferredCategories.map((category) => (
-                        <Badge key={category} variant="outline">{category}</Badge>
-                      ))}
-                    </div>
-                  </div>
+
                 </div>
               )}
             </DialogContent>
