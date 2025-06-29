@@ -148,7 +148,7 @@ export default function ConsultantVerificationPage() {
           return;
         }
         const [startDate, endDate] = [new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], new Date().toISOString().split('T')[0]];
-        const response = await fetch(`${baseUrl}/api/admin/consultants?startdate=${startDate}&enddate=${endDate}`, {
+        const response = await fetch(`${baseUrl}/api/admin/consultants?vsub=1&startdate=${startDate}&enddate=${endDate}`, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',

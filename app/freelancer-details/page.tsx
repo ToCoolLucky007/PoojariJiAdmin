@@ -278,7 +278,7 @@ export default function FreelancerDetailsPage() {
         const currentRange = getDateRangeForPeriod(selectedPeriod, customDateRange);
         const startDate = new Date(currentRange.from).toISOString().split('T')[0];
         const endDate = new Date(currentRange.to).toISOString().split('T')[0];
-        const response = await fetch(`${baseUrl}/api/admin/consultants?startdate=${startDate}&enddate=${endDate}`, {
+        const response = await fetch(`${baseUrl}/api/admin/consultants?vsub=0&startdate=${startDate}&enddate=${endDate}`, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',

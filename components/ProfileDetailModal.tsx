@@ -43,6 +43,8 @@ interface ProfileData {
     idDocumentImage: string;
     languages: string[];
     rituals: string[];
+    status: 'active' | 'inactive';
+    profile: 'approved' | 'pending' | 'rejected' | 'not submitted';
     // Optional fields for different profile types
     about?: string;
     bio?: string;
@@ -51,9 +53,6 @@ interface ProfileData {
     completedProjects?: number;
     skills?: string[];
     services?: Service[];
-    activestatus?: 'active' | 'inactive';
-    status?: 'approved' | 'rejected' | 'pending';
-    profileCompleted?: boolean;
     joinedDate?: string;
     lastActive?: string;
     submittedDate?: string;
@@ -88,31 +87,38 @@ export default function ProfileDetailModal({
 
     const getStatusBadge = (status: string) => {
         switch (status) {
-            case 'approved':
             case 'active':
-                return <Badge className="bg-green-100 text-green-800 hover:bg-green-100"><CheckCircle className="w-3 h-3 mr-1" />Approved</Badge>;
-            case 'rejected':
-                return <Badge variant="destructive"><XCircle className="w-3 h-3 mr-1" />Rejected</Badge>;
+                return <Badge className="bg-green-100 text-green-800 hover:bg-green-100">Active</Badge>;
             case 'inactive':
                 return <Badge variant="secondary">Inactive</Badge>;
             default:
-                return <Badge variant="secondary"><Clock className="w-3 h-3 mr-1" />Pending</Badge>;
+                return <Badge variant="outline">Unknown</Badge>;
         }
     };
 
-    const getActiveBadge = (isactive?: string) => {
-        if (isactive === undefined) return null;
-        return (isactive == "active") ? (
-            <Badge className="bg-green-100 text-green-800 hover:bg-green-100">
-                <CheckCircle className="w-3 h-3 mr-1" />
-                Active
-            </Badge>
-        ) : (
-            <Badge variant="outline" className="bg-orange-50 text-orange-700 border-orange-200">
-                <AlertCircle className="w-3 h-3 mr-1" />
-                In-active
-            </Badge>
-        );
+    const getProfileBadge = (profileStatus: string) => {
+        switch (profileStatus) {
+            case 'approved':
+                return <Badge className="bg-green-100 text-green-800 hover:bg-green-100">
+                    <CheckCircle className="w-3 h-3 mr-1" />
+                    Approved
+                </Badge>;
+            case 'rejected':
+                return <Badge variant="destructive">
+                    <XCircle className="w-3 h-3 mr-1" />
+                    Rejected
+                </Badge>;
+            case 'pending':
+                return <Badge variant="outline" className="bg-orange-50 text-orange-700 border-orange-200">
+                    <Clock className="w-3 h-3 mr-1" />
+                    Pending
+                </Badge>;
+            default:
+                return <Badge variant="outline" className="bg-orange-50 text-orange-700 border-orange-200">
+                    <Clock className="w-3 h-3 mr-1" />
+                    Not Submitted
+                </Badge>;
+        }
     };
 
     // Group services by name for better display
@@ -154,7 +160,7 @@ export default function ProfileDetailModal({
                             <div className="flex-1">
                                 <div className="flex items-center space-x-2 mb-2">
                                     <h3 className="text-2xl font-bold text-gray-900">{profile.name}</h3>
-                                    {profile.status && getStatusBadge(profile.status)}
+                                    {getProfileBadge(profile.profile)}
                                 </div>
                                 <p className="text-gray-600 mb-1">{profile.email}</p>
                                 <p className="text-gray-600 mb-1">{profile.phone}</p>
@@ -162,8 +168,11 @@ export default function ProfileDetailModal({
                                     <p className="text-sm text-gray-500 mb-3">Experience: {profile.experience}</p>
                                 )}
                                 <div className="flex items-center space-x-2">
-
-                                    {profile.activestatus !== undefined && getActiveBadge(profile.activestatus)}
+                                    <Badge variant="outline" className="bg-blue-50 text-blue-700">
+                                        <User className="w-3 h-3 mr-1" />
+                                        {profileType === 'consultant' ? 'Spiritual Consultant' : 'Freelancer'}
+                                    </Badge>
+                                    {getStatusBadge(profile.status)}
                                 </div>
                             </div>
                         </div>
@@ -225,7 +234,7 @@ export default function ProfileDetailModal({
                                 </div>
                             </div>
                         )}
-                        adg
+
                         {/* Services Section */}
                         {profile.services && profile.services.length > 0 && (
                             <div className="bg-green-50 p-4 rounded-lg">
@@ -278,7 +287,10 @@ export default function ProfileDetailModal({
                                         <span className="text-sm text-gray-500">ID Number:</span>
                                         <p className="font-mono font-medium">{profile.identificationNumber}</p>
                                     </div>
-
+                                    <div>
+                                        <span className="text-sm text-gray-500">Document File:</span>
+                                        <p className="text-blue-600 underline cursor-pointer text-sm">{profile.idDocument}</p>
+                                    </div>
                                 </div>
 
                                 <div className="bg-white p-4 rounded border">
@@ -327,7 +339,7 @@ export default function ProfileDetailModal({
                                     </div>
                                 </div>
                             )}
-
+                            {profile.profile}
                             {/* Activity */}
                             <div className="bg-green-50 p-4 rounded-lg">
                                 <h4 className="font-medium text-gray-900 mb-2">Activity</h4>
@@ -348,15 +360,20 @@ export default function ProfileDetailModal({
                             </div>
                         </div>
 
-                        {/* Profile Incomplete Warning */}
-                        {profile.profileCompleted === false && (
+                        {/* Profile Status Warning */}
+                        {profile.profile !== 'approved' && (
                             <div className="bg-orange-50 p-4 rounded-lg border border-orange-200">
                                 <div className="flex items-start space-x-2">
                                     <AlertCircle className="h-5 w-5 text-orange-600 mt-0.5" />
                                     <div>
-                                        <h4 className="font-medium text-orange-900 mb-1">Profile Incomplete</h4>
+                                        <h4 className="font-medium text-orange-900 mb-1">
+                                            Profile {profile.profile === 'rejected' ? 'Rejected' : 'Pending Approval'}
+                                        </h4>
                                         <p className="text-sm text-orange-700">
-                                            This {profileType} hasn't completed their profile yet. They may be missing important information like portfolio items, certifications, or detailed work history.
+                                            {profile.profile === 'rejected'
+                                                ? `This ${profileType}'s profile has been rejected and requires review.`
+                                                : `This ${profileType}'s profile is pending approval and verification.`
+                                            }
                                         </p>
                                     </div>
                                 </div>
@@ -364,7 +381,7 @@ export default function ProfileDetailModal({
                         )}
 
                         {/* Action Buttons */}
-                        {showActions && profile.status === 'pending' && onStatusChange && (
+                        {showActions && profile.profile === 'pending' && onStatusChange && (
                             <div className="flex justify-end space-x-3 pt-4 border-t">
                                 <Button
                                     variant="outline"
