@@ -69,6 +69,7 @@ export const filterDataByDateRange = <T extends { [key: string]: any }>(
     dateField: keyof T,
     dateRange: DateRange
 ): T[] => {
+
     return data.filter(item => {
         const itemDate = new Date(item[dateField] as string);
         return isWithinInterval(itemDate, dateRange);

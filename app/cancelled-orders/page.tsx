@@ -133,7 +133,7 @@ export default function CancelledOrdersPage() {
           return;
         }
 
-        const response = await fetch(`${baseUrl}/api/admin/orders/cancelled`, {
+        const response = await fetch(`${baseUrl}/api/admin/orders/refund`, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
@@ -216,7 +216,7 @@ export default function CancelledOrdersPage() {
       // Determine refund status
 
       const dbrefundstatus = selected.status === 'initiated' ? '1' : '2'; // Assuming 2 = approved, 0 = rejected
-      const res = await fetch(`${baseUrl}/api/admin/orders/cancelled/update`, {
+      const res = await fetch(`${baseUrl}/api/admin/orders/refund/update`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
