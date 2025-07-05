@@ -3,15 +3,18 @@
 import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
-import { 
-  BarChart3, 
-  Users, 
-  Building2, 
-  ShoppingCart, 
-  Menu, 
-  X, 
+import {
+  BarChart3,
+  Users,
+  Building2,
+  ShoppingCart,
+  Menu,
+  X,
   LogOut,
-  User
+  User,
+  UserCheck,
+  Package,
+  Banknote
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -21,7 +24,11 @@ const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: BarChart3 },
   { name: 'Consultant Verification', href: '/consultant-verification', icon: Users },
   { name: 'Business Verification', href: '/business-verification', icon: Building2 },
-  { name: 'Cancelled Orders', href: '/cancelled-orders', icon: ShoppingCart },
+  { name: 'Consultant Details', href: '/freelancer-details', icon: UserCheck },
+  { name: 'Consumer Details', href: '/consumer-details', icon: User },
+  { name: 'Order Details', href: '/order-details', icon: Package },
+  { name: 'Refund Requests', href: '/cancelled-orders', icon: ShoppingCart },
+  { name: 'Withdrawal Requests', href: '/withdrawal-requests', icon: Banknote },
 ];
 
 interface AdminLayoutProps {
@@ -37,7 +44,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
       {/* Mobile menu overlay */}
       {sidebarOpen && (
-        <div 
+        <div
           className="fixed inset-0 z-40 bg-black/20 backdrop-blur-sm lg:hidden"
           onClick={() => setSidebarOpen(false)}
         />
@@ -65,7 +72,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
           </div>
 
           {/* Navigation */}
-          <nav className="flex-1 px-4 py-6 space-y-2">
+          <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
             {navigation.map((item) => {
               const isActive = pathname === item.href;
               return (
