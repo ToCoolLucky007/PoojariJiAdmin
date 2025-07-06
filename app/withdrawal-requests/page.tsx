@@ -476,7 +476,7 @@ export default function WithdrawalRequestsPage() {
             return {
               ...request,
               status: newStatus,
-              transactionId: newStatus !== 'pending' ? transactionId.trim() || undefined : undefined,
+              transactionId: newStatus !== 'failed' ? transactionId.trim() || undefined : undefined,
               adminNotes: adminNotes.trim() || undefined,
               failureReason: newStatus === 'failed' ? failureReason.trim() || undefined : undefined,
               processedDate: currentDate,

@@ -560,10 +560,10 @@ export default function OrderDetailsPage() {
                     </div>
                   </div>
 
-                  <div>
+                  {/* <div>
                     <h4 className="font-medium text-gray-900 mb-2">Description</h4>
                     <p className="text-gray-700 text-sm bg-gray-50 p-3 rounded-lg">{selectedOrder.description}</p>
-                  </div>
+                  </div> */}
 
                   {/* Order Items Section */}
                   <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">

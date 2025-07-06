@@ -44,8 +44,20 @@ interface Consultant {
   experience: string;
   languages: string[];
   rituals: string[];
+  status: 'active' | 'inactive';
+  bio?: string;
+  rating?: number;
+  completedProjects?: number;
+  joinedDate?: string;
+  lastActive?: string;
+  services?: Service[];
 }
-
+interface Service {
+  name: string;
+  price: number;
+  location: string;
+  duration: string;
+}
 // Mock data
 // const mockConsultants: Consultant[] = [
 //   {
