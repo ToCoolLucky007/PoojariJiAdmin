@@ -288,7 +288,7 @@ export default function ConsultantVerificationPage() {
         <AdminLayout>
           <div className="space-y-6">
             <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-              Consultant Verification
+              Freelancer Verification
             </h1>
             <div className="grid gap-4">
               {[1, 2, 3].map((i) => (
@@ -318,7 +318,7 @@ export default function ConsultantVerificationPage() {
         <div className="space-y-6">
           <div className="flex items-center justify-between">
             <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-              Consultant Verification
+              Freelancer Verification
             </h1>
             <Badge variant="outline" className="text-lg px-3 py-1">
               {filteredConsultants.length} Applications
@@ -335,7 +335,7 @@ export default function ConsultantVerificationPage() {
           <Card className="bg-white/80 backdrop-blur-xl border-0 shadow-xl">
             <CardHeader>
               <CardTitle>Filter Applications</CardTitle>
-              <CardDescription>Search and filter consultant verification requests</CardDescription>
+              <CardDescription>Search and filter freelancer verification requests</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="flex flex-col sm:flex-row gap-4">
@@ -433,8 +433,8 @@ export default function ConsultantVerificationPage() {
             onClose={() => setSelectedConsultant(null)}
             onStatusChange={handleStatusChange}
             actionLoading={actionLoading}
-            title="Consultant Verification Details"
-            description="Review the consultant's information and make a decision"
+            title="Freelancer Verification Details"
+            description="Review the freelancer's information and make a decision"
             showActions={true}
             profileType="consultant"
             onActionComplete={handleActionComplete}

@@ -297,7 +297,7 @@ export default function CancelledOrdersPage() {
         <AdminLayout>
           <div className="space-y-6">
             <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-              Cancelled Orders
+              Refund Requests
             </h1>
             <div className="grid gap-4">
               {[1, 2, 3].map((i) => (

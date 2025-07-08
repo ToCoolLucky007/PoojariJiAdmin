@@ -22,9 +22,9 @@ import { cn } from '@/lib/utils';
 
 const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: BarChart3 },
-  { name: 'Consultant Verification', href: '/consultant-verification', icon: Users },
-  { name: 'Business Verification', href: '/business-verification', icon: Building2 },
-  { name: 'Consultant Details', href: '/freelancer-details', icon: UserCheck },
+  { name: 'Freelancer Verification', href: '/consultant-verification', icon: Users },
+  // { name: 'Business Verification', href: '/business-verification', icon: Building2 },
+  { name: 'Freelancer Details', href: '/freelancer-details', icon: UserCheck },
   { name: 'Consumer Details', href: '/consumer-details', icon: User },
   { name: 'Order Details', href: '/order-details', icon: Package },
   { name: 'Refund Requests', href: '/cancelled-orders', icon: ShoppingCart },

@@ -352,28 +352,28 @@ export default function DashboardPage() {
               <CardDescription>Manage your platform efficiently</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                 <Link href="/consultant-verification">
                   <Button variant="outline" className="w-full h-16 hover:bg-blue-50 hover:border-blue-200">
                     <div className="text-center">
                       <UserCheck className="h-6 w-6 mx-auto mb-1 text-blue-600" />
-                      <div className="text-sm font-medium">Consultant Verification</div>
+                      <div className="text-sm font-medium">Freelancer Verification</div>
                     </div>
                   </Button>
                 </Link>
-                <Link href="/business-verification">
+                {/* <Link href="/business-verification">
                   <Button variant="outline" className="w-full h-16 hover:bg-purple-50 hover:border-purple-200">
                     <div className="text-center">
                       <Users className="h-6 w-6 mx-auto mb-1 text-purple-600" />
                       <div className="text-sm font-medium">Business Verification</div>
                     </div>
                   </Button>
-                </Link>
+                </Link> */}
                 <Link href="/cancelled-orders">
                   <Button variant="outline" className="w-full h-16 hover:bg-orange-50 hover:border-orange-200">
                     <div className="text-center">
                       <ShoppingCart className="h-6 w-6 mx-auto mb-1 text-orange-600" />
-                      <div className="text-sm font-medium">Cancelled Orders</div>
+                      <div className="text-sm font-medium">Refund Requests</div>
                     </div>
                   </Button>
                 </Link>
