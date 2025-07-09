@@ -29,6 +29,7 @@ const navigation = [
   { name: 'Order Details', href: '/order-details', icon: Package },
   { name: 'Refund Requests', href: '/cancelled-orders', icon: ShoppingCart },
   { name: 'Withdrawal Requests', href: '/withdrawal-requests', icon: Banknote },
+  { name: 'Service Items', href: '/service-items', icon: Package },
 ];
 
 interface AdminLayoutProps {
