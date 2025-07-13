@@ -14,22 +14,64 @@ import {
   User,
   UserCheck,
   Package,
-  Banknote
+  Banknote,
+  ChevronDown,
+  ChevronRight,
+  FileText,
+  DollarSign,
+  RefreshCw,
+  Settings,
+  Eye
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 
-const navigation = [
-  { name: 'Dashboard', href: '/dashboard', icon: BarChart3 },
-  { name: 'Freelancer Verification', href: '/consultant-verification', icon: Users },
-  // { name: 'Business Verification', href: '/business-verification', icon: Building2 },
-  { name: 'Freelancer Details', href: '/freelancer-details', icon: UserCheck },
-  { name: 'Consumer Details', href: '/consumer-details', icon: User },
-  { name: 'Order Details', href: '/order-details', icon: Package },
-  { name: 'Refund Requests', href: '/cancelled-orders', icon: ShoppingCart },
-  { name: 'Withdrawal Requests', href: '/withdrawal-requests', icon: Banknote },
-  { name: 'Service Items', href: '/service-items', icon: Package },
+interface NavigationItem {
+  name: string;
+  href?: string;
+  icon: any;
+  children?: NavigationItem[];
+}
+
+const navigation: NavigationItem[] = [
+  {
+    name: 'Dashboard',
+    href: '/dashboard',
+    icon: BarChart3
+  },
+  {
+    name: 'Freelancer',
+    icon: Users,
+    children: [
+      { name: 'Verification', href: '/consultant-verification', icon: UserCheck },
+      { name: 'Detail', href: '/freelancer-details', icon: Eye },
+      { name: 'Withdrawal', href: '/withdrawal-requests', icon: Banknote },
+    ]
+  },
+  {
+    name: 'Consumer',
+    icon: User,
+    children: [
+      { name: 'Detail', href: '/consumer-details', icon: Eye },
+      { name: 'Refund', href: '/cancelled-orders', icon: RefreshCw },
+    ]
+  },
+  {
+    name: 'Order',
+    icon: ShoppingCart,
+    children: [
+      { name: 'Order', href: '/order-details', icon: Package },
+    ]
+  },
+  {
+    name: 'Master',
+    icon: Settings,
+    children: [
+      { name: 'Manage Items', href: '/service-items', icon: Package },
+      { name: 'Manage Prices', href: '/tier-pricing', icon: DollarSign },
+    ]
+  },
 ];
 
 interface AdminLayoutProps {
@@ -38,8 +80,104 @@ interface AdminLayoutProps {
 
 export default function AdminLayout({ children }: AdminLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [expandedMenus, setExpandedMenus] = useState<string[]>([]);
   const { user, logout } = useAuth();
   const pathname = usePathname();
+
+  // Auto-expand parent menu if child is active
+  useState(() => {
+    navigation.forEach(item => {
+      if (item.children) {
+        const hasActiveChild = item.children.some(child => child.href === pathname);
+        if (hasActiveChild && !expandedMenus.includes(item.name)) {
+          setExpandedMenus(prev => [...prev, item.name]);
+        }
+      }
+    });
+  });
+
+  const toggleMenu = (menuName: string) => {
+    setExpandedMenus(prev =>
+      prev.includes(menuName)
+        ? prev.filter(name => name !== menuName)
+        : [...prev, menuName]
+    );
+  };
+
+  const isMenuExpanded = (menuName: string) => expandedMenus.includes(menuName);
+
+  const isActiveRoute = (href?: string) => {
+    if (!href) return false;
+    return pathname === href;
+  };
+
+  const hasActiveChild = (children?: NavigationItem[]) => {
+    if (!children) return false;
+    return children.some(child => child.href === pathname);
+  };
+
+  const renderNavigationItem = (item: NavigationItem, level: number = 0) => {
+    const isParent = !!item.children;
+    const isExpanded = isMenuExpanded(item.name);
+    const isActive = isActiveRoute(item.href);
+    const hasActiveChildItem = hasActiveChild(item.children);
+
+    if (isParent) {
+      return (
+        <div key={item.name}>
+          {/* Parent Menu Item */}
+          <button
+            onClick={() => toggleMenu(item.name)}
+            className={cn(
+              "w-full flex items-center justify-between px-4 py-3 text-sm font-medium rounded-xl transition-all duration-200",
+              hasActiveChildItem
+                ? "bg-gradient-to-r from-blue-50 to-purple-50 text-blue-700 border border-blue-200"
+                : "text-gray-700 hover:bg-gray-100/70 hover:text-blue-600"
+            )}
+          >
+            <div className="flex items-center">
+              <item.icon className="mr-3 h-5 w-5" />
+              {item.name}
+            </div>
+            {isExpanded ? (
+              <ChevronDown className="h-4 w-4 transition-transform duration-200" />
+            ) : (
+              <ChevronRight className="h-4 w-4 transition-transform duration-200" />
+            )}
+          </button>
+
+          {/* Child Menu Items */}
+          <div className={cn(
+            "overflow-hidden transition-all duration-300 ease-in-out",
+            isExpanded ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
+          )}>
+            <div className="ml-4 mt-1 space-y-1 border-l-2 border-gray-200 pl-4">
+              {item.children?.map(child => renderNavigationItem(child, level + 1))}
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // Child Menu Item or Single Item
+    return (
+      <Link
+        key={item.name}
+        href={item.href!}
+        className={cn(
+          "flex items-center px-4 py-2.5 text-sm font-medium rounded-lg transition-all duration-200",
+          level > 0 ? "ml-2" : "",
+          isActive
+            ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg transform scale-[1.02]"
+            : "text-gray-600 hover:bg-gray-100/70 hover:text-blue-600 hover:transform hover:scale-[1.01]"
+        )}
+        onClick={() => setSidebarOpen(false)}
+      >
+        <item.icon className={cn("mr-3 h-4 w-4", level > 0 ? "h-4 w-4" : "h-5 w-5")} />
+        {item.name}
+      </Link>
+    );
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
@@ -74,25 +212,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
 
           {/* Navigation */}
           <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
-            {navigation.map((item) => {
-              const isActive = pathname === item.href;
-              return (
-                <Link
-                  key={item.name}
-                  href={item.href}
-                  className={cn(
-                    "flex items-center px-4 py-3 text-sm font-medium rounded-xl transition-all duration-200",
-                    isActive
-                      ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg transform scale-[1.02]"
-                      : "text-gray-700 hover:bg-gray-100/70 hover:text-blue-600 hover:transform hover:scale-[1.01]"
-                  )}
-                  onClick={() => setSidebarOpen(false)}
-                >
-                  <item.icon className="mr-3 h-5 w-5" />
-                  {item.name}
-                </Link>
-              );
-            })}
+            {navigation.map(item => renderNavigationItem(item))}
           </nav>
 
           {/* User section */}
