@@ -69,7 +69,7 @@ interface ServiceItem {
 }
 
 interface BulkUpdateData {
-  serviceid: number;
+  serviceid?: number;
   isactive?: boolean;
   canalterquantity?: boolean;
   nondeliverable?: boolean;
@@ -103,134 +103,134 @@ const measurementOptions = [
 // Replace with actual API calls
 
 // Mock data with only one level of category and services
-const mockCategoryData: Category[] = [
-  {
-    id: 1,
-    name: "Wedding Services",
+// const mockCategoryData: Category[] = [
+//   {
+//     id: 1,
+//     name: "Wedding Services",
 
-    services: [
-      { id: 101, name: "Wedding Ceremony" },
-      { id: 102, name: "Housewarming Puja" },
-    ],
-  },
-  {
-    id: 2,
-    name: "Consultations",
+//     services: [
+//       { id: 101, name: "Wedding Ceremony" },
+//       { id: 102, name: "Housewarming Puja" },
+//     ],
+//   },
+//   {
+//     id: 2,
+//     name: "Consultations",
 
-    services: [
-      { id: 103, name: "Astrology Consultation" },
-      { id: 104, name: "Vastu Consultation" },
-    ],
-  },
-  {
-    id: 3,
-    name: "Festivals",
+//     services: [
+//       { id: 103, name: "Astrology Consultation" },
+//       { id: 104, name: "Vastu Consultation" },
+//     ],
+//   },
+//   {
+//     id: 3,
+//     name: "Festivals",
 
-    services: [
-      { id: 105, name: "Diwali Lakshmi Puja" },
-      { id: 106, name: "Navratri Durga Puja" },
-    ],
-  },
-];
+//     services: [
+//       { id: 105, name: "Diwali Lakshmi Puja" },
+//       { id: 106, name: "Navratri Durga Puja" },
+//     ],
+//   },
+// ];
 // Mock data for service items
-const mockServiceItems: ServiceItem[] = [
-  {
-    id: 1,
-    serviceid: 1,
-    name: 'Priest Services',
-    name_hindi: 'पुजारी सेवाएं',
-    quantity: 1,
-    measurement: 'Hours',
-    measurement_hindi: 'घंटे',
-    isactive: true,
-    canalterquantity: false,
-    nondeliverable: true
-  },
-  {
-    id: 2,
-    serviceid: 1,
-    name: 'Flowers and Garlands',
-    name_hindi: 'फूल और माला',
-    quantity: 5,
-    measurement: 'Kg',
-    measurement_hindi: 'किलोग्राम',
-    isactive: true,
-    canalterquantity: true,
-    nondeliverable: false
-  },
-  {
-    id: 3,
-    serviceid: 1,
-    name: 'Sacred Thread',
-    name_hindi: 'पवित्र धागा',
-    quantity: 10,
-    measurement: 'Meters',
-    measurement_hindi: 'मीटर',
-    isactive: true,
-    canalterquantity: true,
-    nondeliverable: false
-  },
-  {
-    id: 4,
-    serviceid: 2,
-    name: 'Coconuts',
-    name_hindi: 'नारियल',
-    quantity: 5,
-    measurement: 'Piece',
-    measurement_hindi: 'टुकड़ा',
-    isactive: true,
-    canalterquantity: true,
-    nondeliverable: false
-  },
-  {
-    id: 5,
-    serviceid: 2,
-    name: 'Incense Sticks',
-    name_hindi: 'अगरबत्ती',
-    quantity: 2,
-    measurement: 'Packets',
-    measurement_hindi: 'पैकेट',
-    isactive: true,
-    canalterquantity: true,
-    nondeliverable: false
-  },
-  {
-    id: 6,
-    serviceid: 3,
-    name: 'Consultation Session',
-    name_hindi: 'परामर्श सत्र',
-    quantity: 1,
-    measurement: 'Session',
-    measurement_hindi: 'सत्र',
-    isactive: true,
-    canalterquantity: false,
-    nondeliverable: true
-  },
-  {
-    id: 7,
-    serviceid: 4,
-    name: 'Site Visit',
-    name_hindi: 'स्थल भ्रमण',
-    quantity: 1,
-    measurement: 'Visit',
-    measurement_hindi: 'भ्रमण',
-    isactive: true,
-    canalterquantity: false,
-    nondeliverable: true
-  },
-  {
-    id: 8,
-    serviceid: 4,
-    name: 'Vastu Report',
-    name_hindi: 'वास्तु रिपोर्ट',
-    quantity: 1,
-    measurement: 'Document',
-    measurement_hindi: 'दस्तावेज़',
-    isactive: true,
-    canalterquantity: false,
-    nondeliverable: false
-  }
-];
+// const mockServiceItems: ServiceItem[] = [
+//   {
+//     id: 1,
+//     serviceid: 1,
+//     name: 'Priest Services',
+//     name_hindi: 'पुजारी सेवाएं',
+//     quantity: 1,
+//     measurement: 'Hours',
+//     measurement_hindi: 'घंटे',
+//     isactive: true,
+//     canalterquantity: false,
+//     nondeliverable: true
+//   },
+//   {
+//     id: 2,
+//     serviceid: 1,
+//     name: 'Flowers and Garlands',
+//     name_hindi: 'फूल और माला',
+//     quantity: 5,
+//     measurement: 'Kg',
+//     measurement_hindi: 'किलोग्राम',
+//     isactive: true,
+//     canalterquantity: true,
+//     nondeliverable: false
+//   },
+//   {
+//     id: 3,
+//     serviceid: 1,
+//     name: 'Sacred Thread',
+//     name_hindi: 'पवित्र धागा',
+//     quantity: 10,
+//     measurement: 'Meters',
+//     measurement_hindi: 'मीटर',
+//     isactive: true,
+//     canalterquantity: true,
+//     nondeliverable: false
+//   },
+//   {
+//     id: 4,
+//     serviceid: 2,
+//     name: 'Coconuts',
+//     name_hindi: 'नारियल',
+//     quantity: 5,
+//     measurement: 'Piece',
+//     measurement_hindi: 'टुकड़ा',
+//     isactive: true,
+//     canalterquantity: true,
+//     nondeliverable: false
+//   },
+//   {
+//     id: 5,
+//     serviceid: 2,
+//     name: 'Incense Sticks',
+//     name_hindi: 'अगरबत्ती',
+//     quantity: 2,
+//     measurement: 'Packets',
+//     measurement_hindi: 'पैकेट',
+//     isactive: true,
+//     canalterquantity: true,
+//     nondeliverable: false
+//   },
+//   {
+//     id: 6,
+//     serviceid: 3,
+//     name: 'Consultation Session',
+//     name_hindi: 'परामर्श सत्र',
+//     quantity: 1,
+//     measurement: 'Session',
+//     measurement_hindi: 'सत्र',
+//     isactive: true,
+//     canalterquantity: false,
+//     nondeliverable: true
+//   },
+//   {
+//     id: 7,
+//     serviceid: 4,
+//     name: 'Site Visit',
+//     name_hindi: 'स्थल भ्रमण',
+//     quantity: 1,
+//     measurement: 'Visit',
+//     measurement_hindi: 'भ्रमण',
+//     isactive: true,
+//     canalterquantity: false,
+//     nondeliverable: true
+//   },
+//   {
+//     id: 8,
+//     serviceid: 4,
+//     name: 'Vastu Report',
+//     name_hindi: 'वास्तु रिपोर्ट',
+//     quantity: 1,
+//     measurement: 'Document',
+//     measurement_hindi: 'दस्तावेज़',
+//     isactive: true,
+//     canalterquantity: false,
+//     nondeliverable: false
+//   }
+// ];
 
 export default function ServiceItemsPage() {
   const [categories, setCategories] = useState<Category[]>([]);

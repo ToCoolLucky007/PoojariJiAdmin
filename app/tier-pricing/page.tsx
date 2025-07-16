@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Papa from 'papaparse';
 import AdminLayout from '@/components/AdminLayout';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -25,7 +26,9 @@ import {
   Search,
   Filter,
   Save,
-  X
+  X,
+  Upload,
+  FileText
 } from 'lucide-react';
 
 interface Tier {
@@ -41,11 +44,21 @@ interface StateAssignment {
   tierId: string;
   tierName: string;
 }
+interface Category {
+  id: number;
+  name: string;
+  services: Service[];
+}
 
+interface Service {
+  id: number;
+  name: string;
+}
 interface ItemPrice {
   id: string;
   itemName: string;
   category: string;
+  quantity: string;
   tierPrices: { [tierId: string]: number };
 }
 
@@ -61,50 +74,62 @@ const INDIAN_STATES = [
   'Lakshadweep', 'Puducherry', 'Andaman and Nicobar Islands'
 ];
 
-// Mock data
-const mockTiers: Tier[] = [
-  {
-    id: '1',
-    name: 'Tier 1',
-    description: 'Premium tier for metro cities',
-    createdDate: '2024-01-15',
-    assignedStates: ['Delhi', 'Maharashtra', 'Karnataka']
-  },
-  {
-    id: '2',
-    name: 'Tier 2',
-    description: 'Standard tier for major cities',
-    createdDate: '2024-01-16',
-    assignedStates: ['Gujarat', 'Tamil Nadu', 'West Bengal']
-  },
-  {
-    id: '3',
-    name: 'Tier 3',
-    description: 'Economy tier for smaller cities',
-    createdDate: '2024-01-17',
-    assignedStates: ['Bihar', 'Odisha', 'Jharkhand']
-  }
-];
+// // Mock data
+// const mockTiers: Tier[] = [
+//   {
+//     id: '1',
+//     name: 'Tier 1',
+//     description: 'Premium tier for metro cities',
+//     createdDate: '2024-01-15',
+//     assignedStates: ['Delhi', 'Maharashtra', 'Karnataka']
+//   },
+
+//   {
+//     id: '2',
+//     name: 'Tier 2',
+//     description: 'Standard tier for major cities',
+//     createdDate: '2024-01-16',
+//     assignedStates: ['Gujarat', 'Tamil Nadu', 'West Bengal']
+//   },
+//   {
+//     id: '3',
+//     name: 'Tier 3',
+//     description: 'Economy tier for smaller cities',
+//     createdDate: '2024-01-17',
+//     assignedStates: ['Bihar', 'Odisha', 'Jharkhand']
+//   }
+// ];
 
 const mockItems: ItemPrice[] = [
   {
     id: '1',
     itemName: 'Wedding Ceremony',
     category: 'Ceremonies',
+    quantity: '1 kg',
     tierPrices: { '1': 8000, '2': 6500, '3': 5000 }
+  },
+  {
+    id: '16',
+    itemName: 'Rajma',
+    quantity: '1 kg',
+    category: 'Satyanaryan Pooja',
+    tierPrices: {
+      '1': 10,
+      '2': 20
+    }
   },
   {
     id: '2',
     itemName: 'Housewarming Puja',
     category: 'Pujas',
-
+    quantity: '1 kg',
     tierPrices: { '1': 3500, '2': 2800, '3': 2000 }
   },
   {
     id: '3',
     itemName: 'Astrology Consultation',
     category: 'Consultations',
-
+    quantity: '1 kg',
     tierPrices: { '1': 1500, '2': 1200, '3': 1000 }
   }
 ];
@@ -114,7 +139,8 @@ export default function TierPricingPage() {
   const [items, setItems] = useState<ItemPrice[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('tiers');
-
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [serviceFilter, setServiceFilter] = useState<string>('-1');
   // Modal states
   const [showTierModal, setShowTierModal] = useState(false);
   const [showStateModal, setShowStateModal] = useState(false);
@@ -124,6 +150,10 @@ export default function TierPricingPage() {
   // Form states
   const [editingTier, setEditingTier] = useState<Tier | null>(null);
   const [editingItem, setEditingItem] = useState<ItemPrice | null>(null);
+  const [editItemPrices, setEditItemPrices] = useState<{ [tierId: string]: string }>({});
+  const [showImportModal, setShowImportModal] = useState(false);
+  const [importFile, setImportFile] = useState<File | null>(null);
+  const [importPreview, setImportPreview] = useState<any[]>([]);
   const [selectedState, setSelectedState] = useState<string>('');
   const [selectedTierForState, setSelectedTierForState] = useState<string>('');
 
@@ -134,13 +164,16 @@ export default function TierPricingPage() {
 
   // Search and filter
   const [searchTerm, setSearchTerm] = useState('');
-  const [categoryFilter, setCategoryFilter] = useState('all');
+  const [categoryFilter, setCategoryFilter] = useState('0');
 
   // Action states
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [actionResult, setActionResult] = useState<{ type: 'success' | 'error', message: string } | null>(null);
   const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
 
+  const [isFilterLoading, setIsFilterLoading] = useState(false);
+
+  const EXCLUDED_COLUMNS = ['Category', 'Item ID', 'Item Name', 'Quantity'];
 
   // Clear action result when modals open/close
   useEffect(() => {
@@ -154,9 +187,9 @@ export default function TierPricingPage() {
   useEffect(() => {
     const fetchData = async () => {
       setIsLoading(true);
-
+      fetchCategoriesWithServices();
       fetchTiers();
-      setItems(mockItems);
+
       setIsLoading(false);
     };
 
@@ -191,6 +224,126 @@ export default function TierPricingPage() {
       console.error("Failed to load categories:", error);
     }
   };
+
+  // Handle apply filters
+  const handleApplyFilters = () => {
+    //setItems(mockItems);
+    fetchTierPrices({
+      search: searchTerm,
+      serviceid: serviceFilter
+    });
+
+
+  };
+
+  const fetchTierPrices = async (filters: {
+    search?: string;
+    serviceid?: string;
+  } = {}) => {
+    try {
+      setIsLoading(true);
+
+
+      // Validation
+      if (filters.serviceid == "0" && filters.search == "") {
+        setActionResult({ type: 'error', message: 'Enter item name' });
+
+        return;
+      }
+      setActionResult(null);
+      const token = localStorage.getItem('adminToken');
+      if (!token) {
+        console.warn('No admin token found');
+        return;
+      }
+      // Build query parameters
+      const queryParams = new URLSearchParams();
+      if (filters.search) queryParams.append('search', filters.search);
+
+      const response = await fetch(`${baseUrl}/api/admin/pricing/service/${filters.serviceid}/tier/prices?${queryParams.toString()}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      const data = await response.json();
+      if (response.ok && data.success && Array.isArray(data.data)) {
+
+        setItems(data.data);
+      } else {
+        console.error('Failed to fetch consultants:', data.message || 'Unknown error');
+        setItems([]);
+      }
+    } catch (error) {
+      console.error("Failed to load categories:", error);
+    }
+    finally {
+
+      setIsLoading(false);
+
+    }
+
+  };
+
+  const fetchCategoriesWithServices = async () => {
+    try {
+      setIsLoading(true);
+
+      const token = localStorage.getItem('adminToken');
+      if (!token) {
+        console.warn('No admin token found');
+        return;
+      }
+      const response = await fetch(`${baseUrl}/api/admin/service/categories`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success && Array.isArray(data.data)) {
+        const flatData = data.data;
+        // Transform flat result into nested categories with services
+        const categoryMap: { [key: number]: Category } = {};
+
+        flatData.forEach((row: any) => {
+          if (!categoryMap[row.category_id]) {
+            categoryMap[row.category_id] = {
+              id: row.category_id,
+              name: row.category_name,
+
+              services: [],
+            };
+          }
+
+          if (row.service_id) {
+            categoryMap[row.category_id].services.push({
+              id: row.service_id,
+              name: row.service_name,
+
+            });
+          }
+        });
+
+        const nestedCategories = Object.values(categoryMap);
+        setCategories(nestedCategories);
+
+      } else {
+        console.error('Failed to fetch consultants:', data.message || 'Unknown error');
+        setCategories([]);
+
+      }
+    } catch (error) {
+      console.error("Failed to load categories:", error);
+    }
+    setIsLoading(false);
+  };
+
 
   // Get state assignments
   const getStateAssignments = (): StateAssignment[] => {
@@ -290,6 +443,262 @@ export default function TierPricingPage() {
     }
   };
 
+  // Excel Template Download
+  const handleDownloadTemplate = () => {
+    if (items.length === 0) {
+      setActionResult({ type: 'error', message: 'No items available. Please select a service first.' });
+      return;
+    }
+
+    // Create template data
+    const templateData = items.map(item => {
+      const row: any = {
+        'Category': item.category,
+        'Item Id': item.id,
+        'Item Name': item.itemName,
+        'Quantity': item.quantity || '1 unit'
+      };
+
+      // Add tier columns
+      tiers.forEach(tier => {
+        row[tier.name] = item.tierPrices[tier.id] || '';
+      });
+
+      return row;
+    });
+
+    downloadExcel(templateData, 'pricing-template');
+    setActionResult({ type: 'success', message: 'Template downloaded successfully!' });
+  };
+
+  // Export Current Prices
+  const handleExportPrices = () => {
+    if (items.length === 0) {
+      setActionResult({ type: 'error', message: 'No items available to export.' });
+      return;
+    }
+
+    const exportData = items.map(item => {
+      const row: any = {
+        'Category': item.category,
+        'Item Id': item.id,
+        'Item Name': item.itemName,
+        'Quantity': item.quantity || '1 unit'
+      };
+
+      tiers.forEach(tier => {
+        row[tier.name] = item.tierPrices[tier.id] || 0;
+      });
+
+      return row;
+    });
+
+    downloadExcel(exportData, `pricing-export-${new Date().toISOString().split('T')[0]}`);
+    setActionResult({ type: 'success', message: 'Prices exported successfully!' });
+  };
+
+  // Handle Import File
+  const handleImportFile = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    alert("k");
+    setImportFile(file);
+
+    Papa.parse(file, {
+      header: true, // Treat first row as column headers
+      skipEmptyLines: true,
+      complete: function (results: any) {
+        if (results.data && results.data.length > 0) {
+          setImportPreview(results.data); // results.data is an array of objects
+        } else {
+          setActionResult({ type: 'error', message: 'Empty or invalid file' });
+        }
+      },
+      error: function () {
+        setActionResult({ type: 'error', message: 'Failed to read CSV file' });
+      }
+    });
+  };
+
+  // Process Import
+  const handleProcessImport = async () => {
+    if (!importFile || importPreview.length === 0) {
+      setActionResult({ type: 'error', message: 'Please select a valid file first' });
+      return;
+    }
+
+    setActionLoading('import');
+    try {
+      const payload = importPreview.map((row) => {
+        const itemId = parseInt(row['Item Id']);
+        const tierPrices: Record<string, number> = {};
+
+        Object.entries(row).forEach(([column, value]) => {
+          if (!EXCLUDED_COLUMNS.includes(column)) {
+            let tierId: string | undefined;
+
+            tiers.forEach(tier => {
+              if (tier.name == column) {
+                tierId = tier.id;
+              }
+            });
+            //    const tierId = tiers[column]; // Lookup ID using tierMap
+            if (tierId && value !== undefined && value !== '') {
+              const numericValue = parseFloat(value as string);
+              if (!isNaN(numericValue)) {
+                tierPrices[tierId] = numericValue;
+              }
+            }
+          }
+        });
+
+        return {
+          itemId,
+          tierPrices,
+        };
+      });
+
+      const token = localStorage.getItem('adminToken');
+      if (!token) throw new Error('Admin token missing');
+
+      // Simulate API call
+      // Example API call structure:
+      const res = await fetch(`${baseUrl}/api/admin/pricing/bulk/update`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ items: payload })
+      });
+
+      const resData = await res.json();
+      if (!res.ok || !resData.success) {
+        throw new Error(resData.message || 'API call failed');
+      }
+
+      // In real implementation, process the imported data
+      setActionResult({ type: 'success', message: `Successfully imported ${importPreview.length} items!` });
+      setShowImportModal(false);
+      setImportFile(null);
+      setImportPreview([]);
+
+      // Refresh items after import
+      // fetchTierPrices(); // Uncomment when API is ready
+    } catch (error) {
+      setActionResult({ type: 'error', message: 'Failed to import data' });
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  // Download Excel utility function
+  const downloadExcel = (data: any[], filename: string) => {
+    if (data.length === 0) return;
+
+    const headers = Object.keys(data[0]);
+    const csvContent = [
+      headers.join(','),
+      ...data.map(row =>
+        headers.map(header => {
+          const value = row[header];
+          if (typeof value === 'string' && (value.includes(',') || value.includes('"'))) {
+            return `"${value.replace(/"/g, '""')}"`;
+          }
+          return value;
+        }).join(',')
+      )
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+
+    link.setAttribute('href', url);
+    link.setAttribute('download', `${filename}.csv`);
+    link.style.visibility = 'hidden';
+
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+  // Handle edit item with all tier prices
+  const handleEditItem = (item: ItemPrice) => {
+    setEditingItem(item);
+
+    // Initialize edit prices with current tier prices
+    const currentPrices: { [tierId: string]: string } = {};
+    tiers.forEach(tier => {
+      currentPrices[tier.id] = item.tierPrices[tier.id]?.toString() || '';
+    });
+    setEditItemPrices(currentPrices);
+  };
+
+  const handleSaveEditItem = async () => {
+    if (!editingItem) return;
+
+    setActionLoading('edit-item');
+    try {
+      // Convert string prices to numbers and validate
+      const updatedTierPrices: { [tierId: string]: number } = {};
+      let hasError = false;
+
+      Object.entries(editItemPrices).forEach(([tierId, price]) => {
+        if (price.trim()) {
+          const numPrice = parseFloat(price);
+          if (isNaN(numPrice) || numPrice < 0) {
+            hasError = true;
+            return;
+          }
+          updatedTierPrices[tierId] = numPrice;
+        }
+      });
+
+      if (hasError) {
+        setActionResult({ type: 'error', message: 'Please enter valid prices (numbers only, no negative values)' });
+        return;
+      }
+      // API call with item ID and updated prices
+      const updateData = {
+        itemId: editingItem.id,
+        tierPrices: updatedTierPrices
+      };
+
+      const token = localStorage.getItem('adminToken');
+      if (!token) throw new Error('Admin token missing');
+
+      // Simulate API call
+      // Example API call structure:
+      const res = await fetch(`${baseUrl}/api/admin/pricing/item/${editingItem.id}/update`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ tierPrices: updatedTierPrices })
+      });
+
+      const resData = await res.json();
+      if (!res.ok || !resData.success) {
+        throw new Error(resData.message || 'API call failed');
+      }
+
+      // Update the item with new tier prices
+      setItems(prev => prev.map(item =>
+        item.id === editingItem.id
+          ? { ...item, tierPrices: updatedTierPrices }
+          : item
+      ));
+
+      setActionResult({ type: 'success', message: 'Item prices updated successfully!' });
+      setEditingItem(null);
+      setEditItemPrices({});
+    } catch (error) {
+      setActionResult({ type: 'error', message: 'Failed to update item prices' });
+    } finally {
+      setActionLoading(null);
+    }
+  };
   // Handle state removal from tier
   const handleRemoveStateFromTier = async (state: string) => {
     setActionLoading(`remove-${state}`);
@@ -370,67 +779,17 @@ export default function TierPricingPage() {
     }
   };
 
-  // Handle item operations
-  const handleSaveItem = async () => {
-    if (!itemForm.itemName.trim() || !itemForm.category.trim()) {
-      setActionResult({ type: 'error', message: 'Please fill all required fields' });
-      return;
-    }
-
-    setActionLoading('item');
-    try {
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      if (editingItem) {
-        setItems(prev => prev.map(item =>
-          item.id === editingItem.id
-            ? { ...item, ...itemForm }
-            : item
-        ));
-        setActionResult({ type: 'success', message: 'Item updated successfully!' });
-      } else {
-        const newItem: ItemPrice = {
-          id: Date.now().toString(),
-          ...itemForm,
-          tierPrices: {}
-        };
-        setItems(prev => [...prev, newItem]);
-        setActionResult({ type: 'success', message: 'Item created successfully!' });
-      }
-
-      setShowItemModal(false);
-      setEditingItem(null);
-      setItemForm({ itemName: '', category: '' });
-    } catch (error) {
-      setActionResult({ type: 'error', message: 'Failed to save item' });
-    } finally {
-      setActionLoading(null);
-    }
-  };
-
-
-  // Update individual item price
-  const updateItemPrice = async (itemId: string, tierId: string, price: number) => {
-    setItems(prev => prev.map(item =>
-      item.id === itemId
-        ? {
-          ...item,
-          tierPrices: { ...item.tierPrices, [tierId]: price }
-        }
-        : item
-    ));
-  };
 
   // Filter items
   const filteredItems = items.filter(item => {
     const matchesSearch = item.itemName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       item.category.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = categoryFilter === 'all' || item.category === categoryFilter;
+    const matchesCategory = categoryFilter === '0' || item.category === categoryFilter;
     return matchesSearch && matchesCategory;
   });
 
   // Get unique categories
-  const categories = Array.from(new Set(items.map(item => item.category)));
+  // const categories = Array.from(new Set(items.map(item => item.category)));
 
   if (isLoading) {
     return (
@@ -476,11 +835,11 @@ export default function TierPricingPage() {
           )}
 
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-            <TabsList className="grid w-full grid-cols-4">
+            <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="tiers">Tier Management</TabsTrigger>
               <TabsTrigger value="states">State Assignment</TabsTrigger>
               <TabsTrigger value="items">Item Pricing</TabsTrigger>
-              <TabsTrigger value="bulk">Bulk Operations</TabsTrigger>
+
             </TabsList>
 
             {/* Tier Management Tab */}
@@ -534,6 +893,7 @@ export default function TierPricingPage() {
                                 setTierForm({ name: tier.name, description: tier.description });
                                 setShowTierModal(true);
                               }}
+
                             >
                               <Edit className="w-4 h-4" />
                             </Button>
@@ -647,26 +1007,59 @@ export default function TierPricingPage() {
                         />
                       </div>
                     </div>
-                    <div>
+                    <div className="max-w-md">
+
                       <select
-                        value={categoryFilter}
-                        onChange={(e) => setCategoryFilter(e.target.value)}
-                        className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        id="service"
+                        value={serviceFilter}
+                        onChange={(e) => setServiceFilter(e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                       >
-                        <option value="0">Choose Categories</option>
-                        <option value="all">All Categories</option>
-                        {categories.map((category) => (
-                          <option key={category} value={category}>{category}</option>
+                        <option value='-1' disabled >Select Service</option>
+                        <option value='0' >All Services</option>
+                        {categories.map((service) => (
+                          <optgroup key={service.id} label={service.name}>
+                            {service.services.map((service) => (
+                              <option key={service.id} value={service.id.toString()}>
+                                {service.name}
+                              </option>
+                            ))}
+                          </optgroup>
                         ))}
                       </select>
                     </div>
                     <Button
-
+                      onClick={handleApplyFilters}
+                      disabled={isFilterLoading}
                       className="bg-blue-600 hover:bg-blue-700 text-white"
-
                     >
-                      <Filter className="w-4 h-4 mr-2" />
+                      {isFilterLoading ? (
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      ) : (
+                        <Filter className="w-4 h-4 mr-2" />
+                      )}
                       Apply Filters
+                    </Button>
+                  </div>
+
+                  <div className="flex flex-col sm:flex-row gap-4 mb-6">
+
+                    <Button
+                      variant="outline"
+                      className="w-full"
+                      onClick={handleExportPrices}
+                      disabled={items.length === 0}
+                    >
+                      <Package className="w-4 h-4 mr-2" />
+                      Export Current Prices
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="w-full"
+                      onClick={() => setShowImportModal(true)}
+                    >
+                      <Package className="w-4 h-4 mr-2" />
+                      Import Prices from Excel
                     </Button>
                   </div>
 
@@ -693,13 +1086,8 @@ export default function TierPricingPage() {
                             </td>
                             {tiers.map((tier) => (
                               <td key={tier.id} className="p-3">
-                                <Input
-                                  type="number"
-                                  value={item.tierPrices[tier.id]}
-                                  onChange={(e) => updateItemPrice(item.id, tier.id, Number(e.target.value))}
-                                  className="w-24"
-                                  min="0"
-                                />
+
+                                ₹ {item.tierPrices[tier.id]}
                               </td>
                             ))}
                             <td className="p-3">
@@ -707,7 +1095,7 @@ export default function TierPricingPage() {
                                 variant="outline"
                                 size="sm"
                                 onClick={() => {
-                                  setEditingItem(item);
+                                  handleEditItem(item);
                                   setItemForm({
                                     itemName: item.itemName,
                                     category: item.category
@@ -728,35 +1116,7 @@ export default function TierPricingPage() {
             </TabsContent>
 
 
-            {/* Bulk Operations Tab */}
-            <TabsContent value="bulk" className="space-y-6">
-              <Card className="bg-white/80 backdrop-blur-xl border-0 shadow-xl">
-                <CardHeader>
-                  <CardTitle>Bulk Operations</CardTitle>
-                  <CardDescription>Perform bulk operations on pricing and tiers</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid gap-4 md:grid-cols-1">
 
-
-                    <Card className="p-4">
-                      <h3 className="text-lg font-semibold mb-2">Export/Import</h3>
-                      <p className="text-sm text-gray-600 mb-4">Export current pricing or import bulk pricing data</p>
-                      <div className="space-y-2">
-                        <Button variant="outline" className="w-full" disabled>
-                          <Package className="w-4 h-4 mr-2" />
-                          Export Prices
-                        </Button>
-                        <Button variant="outline" className="w-full" disabled>
-                          <Package className="w-4 h-4 mr-2" />
-                          Import Prices
-                        </Button>
-                      </div>
-                    </Card>
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
           </Tabs>
 
           {/* Tier Modal */}
@@ -870,62 +1230,222 @@ export default function TierPricingPage() {
               </div>
             </DialogContent>
           </Dialog>
-
-          {/* Item Modal */}
-          <Dialog open={showItemModal} onOpenChange={setShowItemModal}>
-            <DialogContent>
+          {/* Edit Item Prices Modal */}
+          <Dialog open={!!editingItem} onOpenChange={() => {
+            setEditingItem(null);
+            setEditItemPrices({});
+            setActionResult(null);
+          }}>
+            <DialogContent className="max-w-2xl" key={editingItem?.id}>
               <DialogHeader>
-                <DialogTitle>{editingItem ? 'Edit Item' : 'Add New Item'}</DialogTitle>
+                <DialogTitle>Edit Item Prices</DialogTitle>
                 <DialogDescription>
-                  {editingItem ? 'Update item information' : 'Add a new item to the pricing system'}
+                  Update prices for all tiers for this item
                 </DialogDescription>
               </DialogHeader>
+
               {actionResult && (
                 <Alert className={actionResult.type === 'success' ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}>
                   <AlertCircle className="h-4 w-4" />
                   <AlertDescription>{actionResult.message}</AlertDescription>
                 </Alert>
               )}
+
               <div className="space-y-4">
                 <div>
-                  <Label htmlFor="itemName">Item Name</Label>
-                  <Input
-                    id="itemName"
-                    value={itemForm.itemName}
-                    onChange={(e) => setItemForm(prev => ({ ...prev, itemName: e.target.value }))}
-                    placeholder="e.g., Wedding Ceremony, Consultation"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="category">Category</Label>
-                  <Input
-                    id="category"
-                    value={itemForm.category}
-                    onChange={(e) => setItemForm(prev => ({ ...prev, category: e.target.value }))}
-                    placeholder="e.g., Ceremonies, Pujas, Consultations"
-                  />
+                  <Label className="text-sm font-medium text-gray-700">Item Name</Label>
+                  <div className="mt-1 p-3 bg-gray-50 rounded-md text-sm text-gray-900 font-medium">
+                    {editingItem?.itemName}
+                  </div>
                 </div>
 
-                <div className="flex justify-end space-x-2">
-                  <Button variant="outline" onClick={() => setShowItemModal(false)}>
-                    Cancel
-                  </Button>
-                  <Button onClick={handleSaveItem} disabled={!!actionLoading}>
-                    {actionLoading === 'item' ? (
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    ) : (
-                      <Save className="w-4 h-4 mr-2" />
-                    )}
-                    {editingItem ? 'Update' : 'Add'}
-                  </Button>
+                <div>
+                  <Label className="text-sm font-medium text-gray-700">Category</Label>
+                  <div className="mt-1">
+                    <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                      {editingItem?.category}
+                    </Badge>
+                  </div>
                 </div>
+
+                <div>
+                  <Label className="text-sm font-medium text-gray-700 mb-3 block">
+                    Set Prices for All Tiers
+                  </Label>
+                  <div className="space-y-3 max-h-60 overflow-y-auto">
+                    {tiers.map(tier => (
+                      <div key={tier.id} className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+                        <div className="w-20">
+                          <Badge variant="outline" className="w-full justify-center bg-white">
+                            {tier.name}
+                          </Badge>
+                        </div>
+                        <div className="flex-1">
+                          <div className="relative">
+                            <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">₹</span>
+                            <Input
+                              type="number"
+                              placeholder="Enter price"
+                              value={editItemPrices[tier.id] || ''}
+                              onChange={(e) => setEditItemPrices(prev => ({
+                                ...prev,
+                                [tier.id]: e.target.value
+                              }))}
+                              className="pl-8"
+                              min="0"
+                              step="0.01"
+                            />
+                          </div>
+                        </div>
+                        <div className="w-16 text-xs text-gray-500">
+                          {tier.assignedStates.length} states
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex justify-end space-x-2 mt-6">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setEditingItem(null);
+                    setEditItemPrices({});
+                    setActionResult(null);
+                  }}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleSaveEditItem}
+                  disabled={!!actionLoading}
+                  className="bg-blue-600 hover:bg-blue-700"
+                >
+                  {actionLoading === 'edit-item' ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Saving...
+                    </>
+                  ) : (
+                    <>
+                      <Save className="mr-2 h-4 w-4" />
+                      Save All Prices
+                    </>
+                  )}
+                </Button>
               </div>
             </DialogContent>
           </Dialog>
 
 
+          {/* Import Modal */}
+          <Dialog open={showImportModal} onOpenChange={setShowImportModal}>
+            <DialogContent className="max-w-4xl">
+              <DialogHeader>
+                <DialogTitle>Import Prices from Excel</DialogTitle>
+                <DialogDescription>
+                  Upload an Excel file to bulk import item prices
+                </DialogDescription>
+              </DialogHeader>
+
+              {actionResult && (
+                <Alert className={actionResult.type === 'success' ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}>
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription>{actionResult.message}</AlertDescription>
+                </Alert>
+              )}
+
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="importFile">Select Excel File</Label>
+                  <Input
+                    id="importFile"
+                    type="file"
+                    accept=".xlsx,.xls,.csv"
+                    onChange={handleImportFile}
+                    className="mt-1"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Supported formats: .xlsx, .xls, .csv
+                  </p>
+                </div>
+
+                {importPreview.length > 0 && (
+                  <div>
+                    <Label className="text-sm font-medium text-gray-700 mb-2 block">
+                      Preview ({importPreview.length} items)
+                    </Label>
+                    <div className="border rounded-lg overflow-hidden">
+                      <div className="max-h-60 overflow-y-auto">
+                        <table className="w-full text-sm">
+                          <thead className="bg-gray-50 sticky top-0">
+                            <tr>
+                              {Object.keys(importPreview[0] || {}).map(header => (
+                                <th key={header} className="px-3 py-2 text-left font-medium text-gray-700 border-b">
+                                  {header}
+                                </th>
+                              ))}
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {importPreview.slice(0, 10).map((row, index) => (
+                              <tr key={index} className="border-b">
+                                {Object.values(row).map((value: any, cellIndex) => (
+                                  <td key={cellIndex} className="px-3 py-2 text-gray-900">
+                                    {value}
+                                  </td>
+                                ))}
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                      {importPreview.length > 10 && (
+                        <div className="px-3 py-2 bg-gray-50 text-xs text-gray-500 border-t">
+                          Showing first 10 of {importPreview.length} items
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+
+              <div className="flex justify-end space-x-2 mt-6">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setShowImportModal(false);
+                    setImportFile(null);
+                    setImportPreview([]);
+                    setActionResult(null);
+                  }}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleProcessImport}
+                  disabled={!importFile || importPreview.length === 0 || !!actionLoading}
+                  className="bg-green-600 hover:bg-green-700"
+                >
+                  {actionLoading === 'import' ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Importing...
+                    </>
+                  ) : (
+                    <>
+                      <Package className="mr-2 h-4 w-4" />
+                      Import {importPreview.length} Items
+                    </>
+                  )}
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
         </div>
       </AdminLayout>
-    </ProtectedRoute>
+    </ProtectedRoute >
   );
 }
