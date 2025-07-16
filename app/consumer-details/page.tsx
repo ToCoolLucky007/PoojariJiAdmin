@@ -376,7 +376,7 @@ export default function ConsumerDetailsPage() {
                         </p>
                         <div className="flex items-center space-x-4 mt-1">
                           <span className="text-sm text-gray-500">{consumer.totalOrders} orders</span>
-                          <span className="text-sm font-medium text-green-600">${consumer.totalSpent.toLocaleString()} spent</span>
+                          <span className="text-sm font-medium text-green-600">₹{consumer.totalSpent.toLocaleString()} spent</span>
 
                         </div>
 
@@ -446,7 +446,7 @@ export default function ConsumerDetailsPage() {
                         </div>
                         <div className="flex justify-between">
                           <span className="text-gray-500">Total Spent:</span>
-                          <span className="font-medium">${selectedConsumer.totalSpent.toLocaleString()}</span>
+                          <span className="font-medium">₹{selectedConsumer.totalSpent.toLocaleString()}</span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-gray-500">Avg Order Value:</span>

@@ -18,7 +18,7 @@ import {
   ChevronDown,
   ChevronRight,
   FileText,
-  DollarSign,
+  IndianRupee,
   RefreshCw,
   Settings,
   Eye
@@ -69,7 +69,7 @@ const navigation: NavigationItem[] = [
     icon: Settings,
     children: [
       { name: 'Manage Items', href: '/service-items', icon: Package },
-      { name: 'Manage Prices', href: '/tier-pricing', icon: DollarSign },
+      { name: 'Manage Prices', href: '/tier-pricing', icon: IndianRupee },
     ]
   },
 ];

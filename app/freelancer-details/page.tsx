@@ -28,8 +28,7 @@ import {
   AlertCircle,
   UserCheck,
   Globe,
-  Sparkles,
-  DollarSign
+  Sparkles
 } from 'lucide-react';
 import { TimePeriod, getDateRangeForPeriod, filterDataByDateRange, calculatePeriodComparison } from '@/lib/date-utils';
 
@@ -509,7 +508,7 @@ export default function FreelancerDetailsPage() {
                   <Briefcase className="h-8 w-8 text-purple-600" />
                   <div>
                     <p className="text-2xl font-bold text-gray-900">{filteredFreelancers.reduce((sum, f) => sum + f.completedProjects, 0)}</p>
-                    <p className="text-sm text-gray-500">Total Projects</p>
+                    <p className="text-sm text-gray-500">Total Orders</p>
                   </div>
                 </div>
               </CardContent>
@@ -595,7 +594,7 @@ export default function FreelancerDetailsPage() {
                             <Star className="w-4 h-4 text-yellow-500 mr-1" />
                             <span className="text-sm font-medium">{freelancer.rating}</span>
                           </div>
-                          <span className="text-sm text-gray-500">{freelancer.completedProjects} projects</span>
+                          <span className="text-sm text-gray-500">{freelancer.completedProjects} orders</span>
                           <span className="text-sm font-medium text-green-600">{freelancer.services.length} services</span>
                         </div>
                         <div className="flex flex-wrap gap-1 mt-2">

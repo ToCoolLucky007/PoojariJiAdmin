@@ -7,7 +7,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import {
     Globe,
     Sparkles,
-    DollarSign,
+    IndianRupee,
     ZoomIn,
     X,
     CreditCard,
@@ -255,7 +255,7 @@ export default function ProfileDetailModal({
                         {profile.services && profile.services.length > 0 && (
                             <div className="bg-green-50 p-4 rounded-lg">
                                 <h4 className="font-medium text-gray-900 mb-4 flex items-center">
-                                    <DollarSign className="w-4 h-4 mr-2 text-green-600" />
+                                    <IndianRupee className="w-4 h-4 mr-2 text-green-600" />
                                     Services & Location-Based Pricing
                                 </h4>
                                 <div className="space-y-6">
@@ -348,7 +348,7 @@ export default function ProfileDetailModal({
                                         )}
                                         {profile.completedProjects !== undefined && (
                                             <div className="flex justify-between">
-                                                <span className="text-gray-500">Projects:</span>
+                                                <span className="text-gray-500">Orders:</span>
                                                 <span className="font-medium">{profile.completedProjects}</span>
                                             </div>
                                         )}
