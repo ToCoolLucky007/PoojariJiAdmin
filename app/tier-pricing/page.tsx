@@ -56,7 +56,6 @@ interface Service {
 interface ItemPrice {
   id: string;
   itemName: string;
-  category: string;
   quantity: string;
   tierPrices: { [tierId: string]: number };
 }
@@ -103,7 +102,6 @@ const mockItems: ItemPrice[] = [
   {
     id: '1',
     itemName: 'Wedding Ceremony',
-    category: 'Ceremonies',
     quantity: '1 kg',
     tierPrices: { '1': 8000, '2': 6500, '3': 5000 }
   },
@@ -111,7 +109,6 @@ const mockItems: ItemPrice[] = [
     id: '16',
     itemName: 'Rajma',
     quantity: '1 kg',
-    category: 'Satyanaryan Pooja',
     tierPrices: {
       '1': 10,
       '2': 20
@@ -120,14 +117,12 @@ const mockItems: ItemPrice[] = [
   {
     id: '2',
     itemName: 'Housewarming Puja',
-    category: 'Pujas',
     quantity: '1 kg',
     tierPrices: { '1': 3500, '2': 2800, '3': 2000 }
   },
   {
     id: '3',
     itemName: 'Astrology Consultation',
-    category: 'Consultations',
     quantity: '1 kg',
     tierPrices: { '1': 1500, '2': 1200, '3': 1000 }
   }
@@ -158,7 +153,7 @@ export default function TierPricingPage() {
 
   // Form data
   const [tierForm, setTierForm] = useState({ name: '', description: '' });
-  const [itemForm, setItemForm] = useState({ itemName: '', category: '' });
+  const [itemForm, setItemForm] = useState({ itemName: '' });
 
 
   // Search and filter
@@ -188,7 +183,7 @@ export default function TierPricingPage() {
       setIsLoading(true);
       fetchCategoriesWithServices();
       fetchTiers();
-
+      fetchTierPrices();
       setIsLoading(false);
     };
 
@@ -224,27 +219,16 @@ export default function TierPricingPage() {
     }
   };
 
-  // Handle apply filters
-  const handleApplyFilters = () => {
-    //setItems(mockItems);
-    fetchTierPrices({
-      search: searchTerm,
-      serviceid: serviceFilter
-    });
-
-
-  };
 
   const fetchTierPrices = async (filters: {
     search?: string;
-    serviceid?: string;
   } = {}) => {
     try {
       setIsLoading(true);
 
 
       // Validation
-      if (filters.serviceid == "0" && filters.search == "") {
+      if (filters.search == "") {
         setActionResult({ type: 'error', message: 'Enter item name' });
 
         return;
@@ -259,7 +243,7 @@ export default function TierPricingPage() {
       const queryParams = new URLSearchParams();
       if (filters.search) queryParams.append('search', filters.search);
 
-      const response = await fetch(`${baseUrl}/api/admin/pricing/service/${filters.serviceid}/tier/prices?${queryParams.toString()}`, {
+      const response = await fetch(`${baseUrl}/api/admin/tier/prices?${queryParams.toString()}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -452,7 +436,7 @@ export default function TierPricingPage() {
     // Create template data
     const templateData = items.map(item => {
       const row: any = {
-        'Category': item.category,
+
         'Item Id': item.id,
         'Item Name': item.itemName,
         'Quantity': item.quantity || '1 unit'
@@ -479,7 +463,7 @@ export default function TierPricingPage() {
 
     const exportData = items.map(item => {
       const row: any = {
-        'Category': item.category,
+
         'Item Id': item.id,
         'Item Name': item.itemName,
         'Quantity': item.quantity || '1 unit'
@@ -500,7 +484,7 @@ export default function TierPricingPage() {
   const handleImportFile = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
-    alert("k");
+
     setImportFile(file);
 
     Papa.parse(file, {
@@ -581,7 +565,7 @@ export default function TierPricingPage() {
       setShowImportModal(false);
       setImportFile(null);
       setImportPreview([]);
-
+      fetchTierPrices();
       // Refresh items after import
       // fetchTierPrices(); // Uncomment when API is ready
     } catch (error) {
@@ -781,9 +765,8 @@ export default function TierPricingPage() {
 
   // Filter items
   const filteredItems = items.filter(item => {
-    const matchesSearch = item.itemName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.category.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = categoryFilter === '0' || item.category === categoryFilter;
+    const matchesSearch = item.itemName.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesCategory = categoryFilter === '0';
     return matchesSearch && matchesCategory;
   });
 
@@ -1006,39 +989,8 @@ export default function TierPricingPage() {
                         />
                       </div>
                     </div>
-                    <div className="max-w-md">
 
-                      <select
-                        id="service"
-                        value={serviceFilter}
-                        onChange={(e) => setServiceFilter(e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      >
-                        <option value='-1' disabled >Select Service</option>
-                        <option value='0' >All Services</option>
-                        {categories.map((service) => (
-                          <optgroup key={service.id} label={service.name}>
-                            {service.services.map((service) => (
-                              <option key={service.id} value={service.id.toString()}>
-                                {service.name}
-                              </option>
-                            ))}
-                          </optgroup>
-                        ))}
-                      </select>
-                    </div>
-                    <Button
-                      onClick={handleApplyFilters}
-                      disabled={isFilterLoading}
-                      className="bg-blue-600 hover:bg-blue-700 text-white"
-                    >
-                      {isFilterLoading ? (
-                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      ) : (
-                        <Filter className="w-4 h-4 mr-2" />
-                      )}
-                      Apply Filters
-                    </Button>
+
                   </div>
 
                   <div className="flex flex-col sm:flex-row gap-4 mb-6">
@@ -1067,8 +1019,9 @@ export default function TierPricingPage() {
                     <table className="w-full">
                       <thead>
                         <tr className="border-b">
+                          <th className="text-left p-3">Id</th>
                           <th className="text-left p-3">Item</th>
-                          <th className="text-left p-3">Category</th>
+
 
                           {tiers.map((tier) => (
                             <th key={tier.id} className="text-left p-3">{tier.name}</th>
@@ -1079,10 +1032,9 @@ export default function TierPricingPage() {
                       <tbody>
                         {filteredItems.map((item) => (
                           <tr key={item.id} className="border-b hover:bg-gray-50">
+                            <td className="p-3 font-medium">{item.id}</td>
                             <td className="p-3 font-medium">{item.itemName}</td>
-                            <td className="p-3">
-                              <Badge variant="outline">{item.category}</Badge>
-                            </td>
+
                             {tiers.map((tier) => (
                               <td key={tier.id} className="p-3">
 
@@ -1096,8 +1048,7 @@ export default function TierPricingPage() {
                                 onClick={() => {
                                   handleEditItem(item);
                                   setItemForm({
-                                    itemName: item.itemName,
-                                    category: item.category
+                                    itemName: item.itemName
                                   });
                                   setShowItemModal(true);
                                 }}
@@ -1258,14 +1209,7 @@ export default function TierPricingPage() {
                   </div>
                 </div>
 
-                <div>
-                  <Label className="text-sm font-medium text-gray-700">Category</Label>
-                  <div className="mt-1">
-                    <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
-                      {editingItem?.category}
-                    </Badge>
-                  </div>
-                </div>
+
 
                 <div>
                   <Label className="text-sm font-medium text-gray-700 mb-3 block">

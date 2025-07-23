@@ -54,25 +54,6 @@ interface Category {
 
 interface ServiceItem {
   id: number;
-  itemid: number;
-  serviceid: number;
-  name: string;
-  name_hindi: string;
-  quantity: number;
-  defaultquantity: number;
-  measurement: string;
-  measurement_hindi: string;
-  isactive: boolean;
-  canalterquantity: boolean;
-  nondeliverable: boolean;
-  serviceName?: string; // For display purposes
-  isEditing?: boolean;
-  isSelected?: boolean;
-}
-
-
-interface Item {
-  id: number;
   name: string;
   name_hindi: string;
   quantity: number;
@@ -81,7 +62,6 @@ interface Item {
   isactive: boolean;
   canalterquantity: boolean;
   nondeliverable: boolean;
-  serviceName?: string; // For display purposes
   isEditing?: boolean;
   isSelected?: boolean;
 }
@@ -250,12 +230,11 @@ const measurementOptions = [
 //   }
 // ];
 
-export default function ServiceItemsPage() {
+export default function ItemsPage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [selectedServiceId, setSelectedServiceId] = useState<string>("all");
   const [services, setServices] = useState<Service[]>([]);
   const [serviceItems, setServiceItems] = useState<ServiceItem[]>([]);
-  const [allItems, setAllItems] = useState<Item[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isFilterLoading, setIsFilterLoading] = useState(false);
 
@@ -282,8 +261,7 @@ export default function ServiceItemsPage() {
 
   // New item form
   const [newItem, setNewItem] = useState<Partial<ServiceItem>>({
-    serviceid: 0,
-    itemid: 0,
+
     name: '',
     name_hindi: '',
     quantity: 1,
@@ -291,15 +269,12 @@ export default function ServiceItemsPage() {
     measurement_hindi: '',
     isactive: true,
     canalterquantity: true,
-    nondeliverable: false,
-    defaultquantity: 1
+    nondeliverable: false
   });
 
   // API function to fetch service items with filters
-  const fetchServiceItems = async (filters: {
+  const fetchItems = async (filters: {
     search?: string;
-    serviceid?: string;
-    status?: string;
   } = {}) => {
     setIsFilterLoading(true);
 
@@ -319,9 +294,8 @@ export default function ServiceItemsPage() {
       // Build query parameters
       const queryParams = new URLSearchParams();
       if (filters.search) queryParams.append('search', filters.search);
-      if (filters.status && filters.status !== 'all') queryParams.append('status', (filters.status == "active") ? "1" : "0");
 
-      const response = await fetch(`${baseUrl}/api/admin/service/category/${filters.serviceid}/items?${queryParams.toString()}`, {
+      const response = await fetch(`${baseUrl}/api/admin/items?${queryParams.toString()}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -339,121 +313,25 @@ export default function ServiceItemsPage() {
 
         setServiceItems(itemsWithServiceNames);
       } else {
-        console.error('Failed to fetch service items:', data.message || 'Unknown error');
-        setActionResult({ type: 'error', message: 'Failed to fetch service items' });
+        console.error('Failed to fetch items:', data.message || 'Unknown error');
+        setActionResult({ type: 'error', message: 'Failed to fetch items' });
       }
     } catch (error) {
-      console.error('Error fetching service items:', error);
-      setActionResult({ type: 'error', message: 'Error fetching service items' });
+      console.error('Error fetching items:', error);
+      setActionResult({ type: 'error', message: 'Error fetching items' });
     } finally {
       setIsFilterLoading(false);
     }
   };
-  const fetchCategoriesWithServices = async () => {
-    try {
-      setIsLoading(true);
 
-      const token = localStorage.getItem('adminToken');
-      if (!token) {
-        console.warn('No admin token found');
-        return;
-      }
-      const response = await fetch(`${baseUrl}/api/admin/service/categories`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        }
-      });
-
-      const data = await response.json();
-
-      if (response.ok && data.success && Array.isArray(data.data)) {
-        const flatData = data.data;
-        // Transform flat result into nested categories with services
-        const categoryMap: { [key: number]: Category } = {};
-
-        flatData.forEach((row: any) => {
-          if (!categoryMap[row.category_id]) {
-            categoryMap[row.category_id] = {
-              id: row.category_id,
-              name: row.category_name,
-
-              services: [],
-            };
-          }
-
-          if (row.service_id) {
-            categoryMap[row.category_id].services.push({
-              id: row.service_id,
-              name: row.service_name,
-
-            });
-          }
-        });
-
-        const nestedCategories = Object.values(categoryMap);
-        setCategories(nestedCategories);
-
-      } else {
-        console.error('Failed to fetch consultants:', data.message || 'Unknown error');
-        setCategories([]);
-
-      }
-
-
-
-    } catch (error) {
-      console.error("Failed to load categories:", error);
-    }
-  };
-
-  // Fetch all available items
-  const fetchAllItems = async () => {
-    try {
-      const token = localStorage.getItem('adminToken');
-      if (!token) {
-        console.warn('No admin token found');
-        return;
-      }
-
-      const response = await fetch(`${baseUrl}/api/admin/items`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        }
-      });
-
-      const data = await response.json();
-
-      if (response.ok && data.success && Array.isArray(data.data)) {
-        setAllItems(data.data);
-      } else {
-        console.error('Failed to fetch all items:', data.message || 'Unknown error');
-        setAllItems([]);
-      }
-    } catch (error) {
-      console.error('Error fetching all items:', error);
-      setAllItems([]);
-    }
-  };
   // Initial data load
   useEffect(() => {
     const fetchInitialData = async () => {
       setIsLoading(true);
-      await fetchAllItems();
+
       // Load services first
-      await fetchCategoriesWithServices();
-      // Load all available items
+      fetchItems();
 
-
-      // Then load service items with initial filters
-      // await fetchServiceItems({
-      //   search: appliedSearchTerm,
-      //   serviceid: appliedServiceFilter,
-      //   status: appliedStatusFilter
-      // });
 
       setIsLoading(false);
     };
@@ -471,23 +349,16 @@ export default function ServiceItemsPage() {
     setAppliedServiceFilter(serviceFilter);
     setAppliedStatusFilter(statusFilter);
 
-    fetchServiceItems({
-      search: searchTerm,
-      serviceid: serviceFilter,
-      status: statusFilter
+    fetchItems({
+      search: searchTerm
     });
   };
 
   // Handle reset filters
   const handleResetFilters = () => {
     setSearchTerm('');
-    setServiceFilter('0');
-    setStatusFilter('all');
     setAppliedSearchTerm('');
-    setAppliedServiceFilter('0');
-    setAppliedStatusFilter('all');
-
-    setServiceItems([]);
+    fetchItems();
   };
 
   // Check if filters have changed from applied filters
@@ -550,7 +421,7 @@ export default function ServiceItemsPage() {
     try {
 
 
-      const response = await fetch(`${baseUrl}/api/admin/service/${editingItem.serviceid}/item/update`, {
+      const response = await fetch(`${baseUrl}/api/admin/item/update`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -571,7 +442,7 @@ export default function ServiceItemsPage() {
       setServiceItems(prev =>
         prev.map(item =>
           item.id === editingItem.id
-            ? { ...editingItem, serviceName: item.serviceName }
+            ? { ...editingItem }
             : item
         )
       );
@@ -592,9 +463,7 @@ export default function ServiceItemsPage() {
 
   // Handle adding new item
   const handleAddItem = async () => {
-
-
-    if (!newItem.itemid || !newItem.serviceid) {
+    if (!newItem.name || !newItem.quantity || !newItem.measurement || !newItem.name_hindi) {
       setActionResult({ type: 'error', message: 'Please fill in required fields.' });
       return;
     }
@@ -606,28 +475,22 @@ export default function ServiceItemsPage() {
       return;
     }
     setActionLoading(true);
-
-    // Find the selected item details
-    const selectedItem = allItems.find(item => item.id === newItem.itemid);
-
-    if (!selectedItem) {
-      setActionResult({ type: 'error', message: 'Selected item not found.' });
-      setActionLoading(false);
-      return;
-    }
-
     // Build custom payload
     const payload = {
-      itemid: newItem.itemid,
-      serviceid: newItem.serviceid,
+      name: newItem.name,
+      name_hindi: newItem.name_hindi,
       quantity: newItem.quantity,
-      isactive: newItem.isactive ? 1 : 0
+      measurement: newItem.measurement,
+      measurement_hindi: newItem.measurement_hindi,
+      isactive: newItem.isactive ? 1 : 0,
+      canalterquantity: newItem.canalterquantity ? 1 : 0,
+      nondeliverable: newItem.nondeliverable ? 1 : 0,
     };
 
 
     try {
 
-      const response = await fetch(`${baseUrl}/api/admin/service/category/${newItem.serviceid}/item/add`, {
+      const response = await fetch(`${baseUrl}/api/admin/item/add`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -649,12 +512,9 @@ export default function ServiceItemsPage() {
 
       setServiceItems(prev => [...prev, result.data]);
       setNewItem({
-        serviceid: 0,
-        itemid: 0,
         name: '',
         name_hindi: '',
         quantity: 1,
-        defaultquantity: 1,
         measurement: '',
         measurement_hindi: '',
         isactive: true,
@@ -695,7 +555,7 @@ export default function ServiceItemsPage() {
     };
 
     try {
-      const response = await fetch(`${baseUrl}/api/admin/service/items/bulkupdate`, {
+      const response = await fetch(`${baseUrl}/api/admin/items/bulkupdate`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -773,56 +633,7 @@ export default function ServiceItemsPage() {
       });
     }
   };
-  // Get available items for the selected service (excluding already added ones)
-  const getAvailableItems = () => {
 
-    //if (!newItem.serviceid) return [];
-
-    // Get items already added to this service
-    // const addedItemIds = serviceItems
-    //   .filter(item => item.itemid === newItem.id)
-    //   .map(item => item.itemid);
-    const addedItemIds = serviceItems.map(item => item.itemid);
-
-    // Return all items with disabled flag for already added ones
-    return allItems.map(item => ({
-      ...item,
-      isDisabled: addedItemIds.includes(item.id)
-    }));
-  };
-  // Get service name by ID
-  const getServiceName = (serviceId: string) => {
-    for (const category of categories) {
-      const service = category.services.find(s => s.id === parseInt(serviceId));
-      if (service) {
-        return service.name;
-      }
-    }
-    return 'Unknown Service';
-  };
-  // Handle item selection
-  const handleItemSelect = (itemId: number) => {
-
-    const selectedItem = allItems.find(item => item.id === itemId);
-
-    if (selectedItem) {
-
-      setNewItem({
-        ...newItem,
-        itemid: selectedItem?.id,
-        serviceid: parseInt(serviceFilter),
-        name: selectedItem.name,
-        name_hindi: selectedItem.name_hindi,
-        quantity: selectedItem.quantity,
-        defaultquantity: selectedItem.quantity,
-        measurement: selectedItem.measurement,
-        measurement_hindi: selectedItem.measurement_hindi,
-        canalterquantity: selectedItem.canalterquantity,
-        nondeliverable: selectedItem.nondeliverable
-
-      });
-    }
-  };
   const getStatusBadge = (isActive: boolean) => {
     return isActive
       ? <Badge className="bg-green-100 text-green-800 hover:bg-green-100">Active</Badge>
@@ -841,7 +652,7 @@ export default function ServiceItemsPage() {
         <AdminLayout>
           <div className="space-y-6">
             <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-              Service Items Management
+              Items Management
             </h1>
             <div className="grid gap-4">
               {[1, 2, 3].map((i) => (
@@ -870,13 +681,19 @@ export default function ServiceItemsPage() {
         <div className="space-y-6">
           <div className="flex items-center justify-between">
             <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-              Service Items Management
+              Items Management
             </h1>
             <div className="flex items-center space-x-3">
               <Badge variant="outline" className="text-lg px-3 py-1">
                 {serviceItems.length} Items
               </Badge>
-
+              <Button
+                onClick={() => setShowAddModal(true)}
+                className="bg-blue-600 hover:bg-blue-700 text-white"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Add Item
+              </Button>
             </div>
           </div>
 
@@ -896,7 +713,7 @@ export default function ServiceItemsPage() {
                     <Filter className="w-5 h-5 mr-2 text-blue-600" />
                     Filters & Actions
                   </CardTitle>
-                  <CardDescription>Search and filter service items, or perform bulk operations</CardDescription>
+                  <CardDescription>Search and filter items, or perform bulk operations</CardDescription>
                 </div>
                 <Button
                   variant="outline"
@@ -926,43 +743,9 @@ export default function ServiceItemsPage() {
                     </div>
                   </div>
 
-                  <div className="max-w-md">
-                    <label htmlFor="service" className="block mb-1 font-medium">
-                      Select Service
-                    </label>
-                    <select
-                      id="service"
-                      value={serviceFilter}
-                      onChange={(e) => setServiceFilter(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    >
-                      <option value={0} disabled >Select Service</option>
 
-                      {categories.map((category) => (
-                        <optgroup key={category.id} label={category.name}>
-                          {category.services.map((service) => (
-                            <option key={service.id} value={service.id.toString()}>
-                              {service.name}
-                            </option>
-                          ))}
-                        </optgroup>
-                      ))}
-                    </select>
-                  </div>
 
-                  <div>
-                    <Label htmlFor="status">Status</Label>
-                    <select
-                      id="status"
-                      value={statusFilter}
-                      onChange={(e) => setStatusFilter(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    >
-                      <option value="all">All Status</option>
-                      <option value="active">Active</option>
-                      <option value="inactive">Inactive</option>
-                    </select>
-                  </div>
+
                 </div>
 
                 {/* Apply Filter Button */}
@@ -1030,9 +813,9 @@ export default function ServiceItemsPage() {
           <Card className="bg-white/80 backdrop-blur-xl border-0 shadow-xl">
             <CardHeader>
               <div className="flex items-center justify-between">
-                <CardTitle>Service Items</CardTitle>
+                <CardTitle>Items</CardTitle>
                 <div className="flex items-center space-x-2">
-                  {/* <Button
+                  <Button
                     variant="outline"
                     size="sm"
                     onClick={handleSelectAll}
@@ -1044,14 +827,6 @@ export default function ServiceItemsPage() {
                       <Square className="w-4 h-4 mr-2" />
                     )}
                     Select All
-                  </Button> */}
-                  <Button
-                    onClick={() => setShowAddModal(true)}
-                    disabled={serviceItems.length === 0}
-                    className="bg-blue-600 hover:bg-blue-700 text-white"
-                  >
-                    <Plus className="w-4 h-4 mr-2" />
-                    Add Item
                   </Button>
                 </div>
               </div>
@@ -1064,14 +839,13 @@ export default function ServiceItemsPage() {
                 </div>
               ) : (
                 <div className="overflow-x-auto">
-
                   <table className="w-full">
                     <thead>
                       <tr className="border-b border-gray-200">
-                        {/* <th className="text-left py-3 px-2 font-medium text-gray-700">Select</th>
-                        <th className="text-left py-3 px-2 font-medium text-gray-700">Service</th> */}
-                        <th className="text-left py-3 px-2 font-medium text-gray-700">ID</th>
+                        <th className="text-left py-3 px-2 font-medium text-gray-700">Select</th>
+                        {/* <th className="text-left py-3 px-2 font-medium text-gray-700">Service</th> */}
                         <th className="text-left py-3 px-2 font-medium text-gray-700">Item Name</th>
+                        <th className="text-left py-3 px-2 font-medium text-gray-700">Hindi Name</th>
                         <th className="text-left py-3 px-2 font-medium text-gray-700">Quantity</th>
                         <th className="text-left py-3 px-2 font-medium text-gray-700">Measurement</th>
                         <th className="text-left py-3 px-2 font-medium text-gray-700">Status</th>
@@ -1082,7 +856,7 @@ export default function ServiceItemsPage() {
                     <tbody>
                       {serviceItems.map((item) => (
                         <tr key={item.id} className="border-b border-gray-100 hover:bg-gray-50">
-                          {/*  <td className="py-3 px-2">
+                          <td className="py-3 px-2">
                             <Button
                               variant="ghost"
                               size="sm"
@@ -1096,23 +870,33 @@ export default function ServiceItemsPage() {
                               )}
                             </Button>
                           </td>
-                           <td className="py-3 px-2">
+                          {/* <td className="py-3 px-2">
                             <Badge variant="outline" className="text-xs">
                               {item.serviceName}
                             </Badge>
                           </td> */}
                           <td className="py-3 px-2">
-                            {
-                              <span className="text-gray-600">{item.itemid}</span>
-                            }
+                            {editingItem?.id === item.id ? (
+                              <Input
+                                value={editingItem.name}
+                                onChange={(e) => setEditingItem({ ...editingItem, name: e.target.value })}
+                                className="w-full"
+                              />
+                            ) : (
+                              <span className="font-medium">{item.name}</span>
+                            )}
                           </td>
                           <td className="py-3 px-2">
-                            {<div>
-                              <div className="font-medium">{item.name}</div>
-                              <div className="text-sm text-gray-500">{item.name_hindi}</div>
-                            </div>}
+                            {editingItem?.id === item.id ? (
+                              <Input
+                                value={editingItem.name_hindi}
+                                onChange={(e) => setEditingItem({ ...editingItem, name_hindi: e.target.value })}
+                                className="w-full"
+                              />
+                            ) : (
+                              <span className="text-gray-600">{item.name_hindi}</span>
+                            )}
                           </td>
-
                           <td className="py-3 px-2">
                             {editingItem?.id === item.id ? (
                               <Input
@@ -1126,15 +910,32 @@ export default function ServiceItemsPage() {
                             )}
                           </td>
                           <td className="py-3 px-2">
-                            {
+                            {editingItem?.id === item.id ? (
+                              <div className="space-y-1">
+                                <select
+                                  value={`${editingItem.measurement}|${editingItem.measurement_hindi}`}
+                                  onChange={(e) => {
+                                    const [english, hindi] = e.target.value.split('|');
+                                    handleMeasurementSelect({ english, hindi }, true);
+                                  }}
+                                  className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                >
+                                  <option value="">Select Measurement</option>
+                                  {measurementOptions.map((option) => (
+                                    <option key={option.english} value={`${option.english}|${option.hindi}`}>
+                                      {option.english} / {option.hindi}
+                                    </option>
+                                  ))}
+                                </select>
+                              </div>
+                            ) : (
                               <div>
                                 <div className="font-medium">{item.measurement}</div>
                                 <div className="text-sm text-gray-500">{item.measurement_hindi}</div>
                               </div>
-                            }
+                            )}
                           </td>
                           <td className="py-3 px-2">
-
                             {editingItem?.id === item.id ? (
                               <Button
                                 variant="outline"
@@ -1151,15 +952,33 @@ export default function ServiceItemsPage() {
                             ) : (
                               getStatusBadge(item.isactive)
                             )}
-
                           </td>
                           <td className="py-3 px-2">
-
-                            <div className="space-y-1">
-                              {getBooleanBadge(item.canalterquantity, 'Can Alter', 'Fixed Qty')}
-                              {getBooleanBadge(item.nondeliverable, 'OUT', 'IN')}
-                            </div>
-
+                            {editingItem?.id === item.id ? (
+                              <div className="space-y-1">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => setEditingItem({ ...editingItem, canalterquantity: !editingItem.canalterquantity })}
+                                  className={`w-full ${editingItem.canalterquantity ? 'bg-blue-50 border-blue-200' : 'bg-gray-50'}`}
+                                >
+                                  {editingItem.canalterquantity ? 'Can Alter' : 'Fixed Qty'}
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => setEditingItem({ ...editingItem, nondeliverable: !editingItem.nondeliverable })}
+                                  className={`w-full ${editingItem.nondeliverable ? 'bg-orange-50 border-orange-200' : 'bg-gray-50'}`}
+                                >
+                                  {editingItem.nondeliverable ? 'OUT' : 'IN'}
+                                </Button>
+                              </div>
+                            ) : (
+                              <div className="space-y-1">
+                                {getBooleanBadge(item.canalterquantity, 'Can Alter', 'Fixed Qty')}
+                                {getBooleanBadge(item.nondeliverable, 'OUT', 'IN')}
+                              </div>
+                            )}
                           </td>
                           <td className="py-3 px-2">
                             {editingItem?.id === item.id ? (
@@ -1215,7 +1034,7 @@ export default function ServiceItemsPage() {
               {!isFilterLoading && serviceItems.length === 0 && (
                 <div className="text-center py-12">
                   <Package className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">No service items found</h3>
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">No items found</h3>
                   <p className="text-gray-500">Try adjusting your search or filter criteria.</p>
                 </div>
               )}
@@ -1226,11 +1045,9 @@ export default function ServiceItemsPage() {
           <Dialog open={showAddModal} onOpenChange={setShowAddModal}>
             <DialogContent className="sm:max-w-2xl">
               <DialogHeader>
-                <DialogTitle>Add New Service Item</DialogTitle>
+                <DialogTitle>Add New Item</DialogTitle>
                 <DialogDescription>
-
-                  <>Adding item to: <span className="font-semibold text-blue-600">{getServiceName(serviceFilter)}</span></>
-
+                  Create a new item
                 </DialogDescription>
               </DialogHeader>
 
@@ -1238,113 +1055,94 @@ export default function ServiceItemsPage() {
 
 
 
-                <div>
-                  <Label htmlFor="selectNewItem">Select Item *</Label>
 
 
-                  <select
-                    id="selectNewItem"
-                    value={newItem.itemid || 0}
-                    onChange={(e) => {
-                      const itemId = parseInt(e.target.value);
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="newName">Item Name (English) *</Label>
+                    <Input
+                      id="newName"
+                      value={newItem.name}
+                      onChange={(e) => setNewItem({ ...newItem, name: e.target.value })}
+                      placeholder="Enter item name"
+                    />
+                  </div>
 
-                      if (itemId > 0) {
-                        handleItemSelect(itemId);
-                      } else {
-                        setNewItem({
-                          ...newItem,
-                          itemid: 0,
-                          quantity: 0
-                        });
-                      }
-                    }}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  // disabled={!newItem.serviceid}
-                  >
-                    <option value="">
-                      {'Select Item'}
-                    </option>
-                    {getAvailableItems().map((item) => (
-                      <option
-                        key={item.id}
-                        value={item.id}
-                        disabled={item.isDisabled}
-                        className={item.isDisabled ? 'text-gray-400 bg-gray-100' : ''}
-                      >
-                        {item.isDisabled ? '✓ ' : ''}{item.name} ({item.quantity} {item.measurement})
-                      </option>
-                    ))}
-                  </select>
+                  <div>
+                    <Label htmlFor="newNameHindi">Item Name (Hindi)</Label>
+                    <Input
+                      id="newNameHindi"
+                      value={newItem.name_hindi}
+                      onChange={(e) => setNewItem({ ...newItem, name_hindi: e.target.value })}
+                      placeholder="हिंदी में नाम"
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="newQuantity">Quantity</Label>
+                    <Input
+                      id="newQuantity"
+                      type="number"
+                      value={newItem.quantity}
+                      onChange={(e) => setNewItem({ ...newItem, quantity: parseInt(e.target.value) || 1 })}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="newMeasurement">Measurement</Label>
+                    <select
+                      id="newMeasurement"
+                      value={`${newItem.measurement}|${newItem.measurement_hindi}`}
+                      onChange={(e) => {
+                        const [english, hindi] = e.target.value.split('|');
+                        handleMeasurementSelect({ english, hindi });
+                      }}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="|">Select Measurement</option>
+                      {measurementOptions.map((option) => (
+                        <option key={option.english} value={`${option.english}|${option.hindi}`}>
+                          {option.english} / {option.hindi}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      id="newActive"
+                      checked={newItem.isactive}
+                      onChange={(e) => setNewItem({ ...newItem, isactive: e.target.checked })}
+                      className="rounded border-gray-300"
+                    />
+                    <Label htmlFor="newActive">Active</Label>
+                  </div>
+
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      id="newCanAlter"
+                      checked={newItem.canalterquantity}
+                      onChange={(e) => setNewItem({ ...newItem, canalterquantity: e.target.checked })}
+                      className="rounded border-gray-300"
+                    />
+                    <Label htmlFor="newCanAlter">Can Alter Quantity</Label>
+                  </div>
+
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      id="newNonDeliverable"
+                      checked={newItem.nondeliverable}
+                      onChange={(e) => setNewItem({ ...newItem, nondeliverable: e.target.checked })}
+                      className="rounded border-gray-300"
+                    />
+                    <Label htmlFor="newNonDeliverable">Non-deliverable</Label>
+                  </div>
                 </div>
 
-                <div>
-
-                  {newItem.itemid && (
-
-                    <>
-                      <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-                        <Label className="text-sm font-medium text-blue-900 mb-2 block">Selected Item Details</Label>
-                        <div className="grid grid-cols-1 gap-4 text-sm">
-                          <div>
-                            <span className="font-medium text-gray-700">{`Name: ${newItem.name}(${newItem.name_hindi})`} </span>
-                            <div className="text-gray-900">Quantity: {newItem.quantity} {newItem.measurement}</div>
-                            <div className="text-gray-600 text-xs">
-                              Can alter quantity: <strong>{newItem.canalterquantity === true ? 'Yes' : 'No'}</strong>,
-                              Part of Delivery: <strong>{newItem.nondeliverable === true ? 'No' : 'Yes'}</strong>
-                            </div>
-
-                          </div>
-                        </div>
-                      </div>
-                      <div>
-                        <Label htmlFor="newQuantity">Enter quantity for this service *</Label>
-                        <div className="flex items-center gap-2">
-                          <Input
-                            id="newQuantity"
-                            className="w-1/2"
-                            type="number"
-                            value={newItem.quantity}
-                            onChange={(e) => {
-                              const inputQty = parseInt(e.target.value) || 0;
-                              setNewItem({ ...newItem, quantity: inputQty }); // always update
-                            }}
-                            placeholder="Enter quantity"
-                            min={newItem.defaultquantity}
-                          />
-                          <div className="w-1/2 text-sm text-gray-600">{newItem.measurement}</div>
-                        </div>
-                        {newItem.quantity !== undefined &&
-                          newItem.defaultquantity !== undefined &&
-                          newItem.quantity < newItem.defaultquantity && (
-                            <p className="text-xs text-red-600 mt-1">
-                              Quantity must be at least {newItem.defaultquantity} {newItem.measurement}
-                            </p>
-                          )}
-
-                      </div>
-                      <div>
-                        <Label className="text-sm font-medium text-gray-700 mb-3 block">Item Properties</Label>
-                      </div>
-
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div className="flex items-center space-x-2">
-                          <input
-                            type="checkbox"
-                            id="newActive"
-                            checked={newItem.isactive}
-                            onChange={(e) => setNewItem({ ...newItem, isactive: e.target.checked })}
-                            className="rounded border-gray-300"
-                          />
-                          <Label htmlFor="newActive">Active</Label>
-                        </div>
-
-
-                      </div>
-
-                    </>
-
-                  )}
-                </div>
                 <div className="flex justify-end space-x-3 pt-4 border-t">
                   <Button
                     variant="outline"

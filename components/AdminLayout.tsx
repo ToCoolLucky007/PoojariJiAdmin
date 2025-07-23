@@ -68,8 +68,9 @@ const navigation: NavigationItem[] = [
     name: 'Master',
     icon: Settings,
     children: [
-      { name: 'Manage Items', href: '/service-items', icon: Package },
+      { name: 'Manage Items', href: '/items', icon: Package },
       { name: 'Manage Prices', href: '/tier-pricing', icon: IndianRupee },
+      { name: 'Service Items', href: '/service-items', icon: Package },
     ]
   },
 ];
