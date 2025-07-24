@@ -55,9 +55,11 @@ interface Service {
 }
 interface ItemPrice {
   id: string;
-  itemName: string;
+  name: string;
+  name_hindi: string;
   quantity: string;
   measurement: string;
+  measurement_hindi: string;
   tierPrices: { [tierId: string]: number };
 }
 
@@ -439,7 +441,7 @@ export default function TierPricingPage() {
       const row: any = {
 
         'Item Id': item.id,
-        'Item Name': item.itemName,
+        'Item Name': item.name,
         'Quantity': item.quantity || '1 unit'
       };
 
@@ -466,8 +468,8 @@ export default function TierPricingPage() {
       const row: any = {
 
         'Item Id': item.id,
-        'Item Name': item.itemName,
-        'Quantity': item.quantity || '1 unit'
+        'Item Name': item.name,
+        'Quantity': item.quantity + ' ' + item.measurement || '1 unit'
       };
 
       tiers.forEach(tier => {
@@ -766,7 +768,7 @@ export default function TierPricingPage() {
 
   // Filter items
   const filteredItems = items.filter(item => {
-    const matchesSearch = item.itemName.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = item.name?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = categoryFilter === '0';
     return matchesSearch && matchesCategory;
   });
@@ -1023,7 +1025,7 @@ export default function TierPricingPage() {
                           <th className="text-left p-3">Id</th>
                           <th className="text-left p-3">Item</th>
 
-                          <th className="text-left p-3">Quantity</th>
+                          <th className="text-left p-3">Packing</th>
                           {tiers.map((tier) => (
                             <th key={tier.id} className="text-left p-3">{tier.name}</th>
                           ))}
@@ -1034,8 +1036,13 @@ export default function TierPricingPage() {
                         {filteredItems.map((item) => (
                           <tr key={item.id} className="border-b hover:bg-gray-50">
                             <td className="p-3 font-medium">{item.id}</td>
-                            <td className="p-3 font-medium">{item.itemName}</td>
-                            <td className="p-3 font-medium">{item.quantity}</td>
+                            <td className="p-3 font-medium"><div>
+                              <div className="font-medium">{item.name}</div>
+                              <div className="font-medium">{item.name_hindi}</div>
+                            </div></td>
+                            <td className="p-3 font-medium">
+                              <div className="font-medium">{item.quantity}</div>
+                              <div className="font-medium">{item.measurement}/{item.measurement_hindi}</div></td>
                             {tiers.map((tier) => (
                               <td key={tier.id} className="p-3">
 
@@ -1049,7 +1056,7 @@ export default function TierPricingPage() {
                                 onClick={() => {
                                   handleEditItem(item);
                                   setItemForm({
-                                    itemName: item.itemName
+                                    itemName: item.name
                                   });
                                   setShowItemModal(true);
                                 }}
@@ -1206,7 +1213,7 @@ export default function TierPricingPage() {
                 <div>
                   <Label className="text-sm font-medium text-gray-700">Item Name</Label>
                   <div className="mt-1 p-3 bg-gray-50 rounded-md text-sm text-gray-900 font-medium">
-                    {editingItem?.itemName}
+                    {editingItem?.name}
                   </div>
                 </div>
 

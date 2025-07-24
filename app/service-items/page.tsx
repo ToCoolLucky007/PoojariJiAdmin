@@ -59,6 +59,7 @@ interface ServiceItem {
   name: string;
   name_hindi: string;
   quantity: number;
+  basequantity: number;
   defaultquantity: number;
   measurement: string;
   measurement_hindi: string;
@@ -1072,8 +1073,8 @@ export default function ServiceItemsPage() {
                         <th className="text-left py-3 px-2 font-medium text-gray-700">Service</th> */}
                         <th className="text-left py-3 px-2 font-medium text-gray-700">ID</th>
                         <th className="text-left py-3 px-2 font-medium text-gray-700">Item Name</th>
+                        <th className="text-left py-3 px-2 font-medium text-gray-700">Packing</th>
                         <th className="text-left py-3 px-2 font-medium text-gray-700">Quantity</th>
-                        <th className="text-left py-3 px-2 font-medium text-gray-700">Measurement</th>
                         <th className="text-left py-3 px-2 font-medium text-gray-700">Status</th>
                         <th className="text-left py-3 px-2 font-medium text-gray-700">Properties</th>
                         <th className="text-left py-3 px-2 font-medium text-gray-700">Actions</th>
@@ -1113,6 +1114,15 @@ export default function ServiceItemsPage() {
                             </div>}
                           </td>
 
+
+                          <td className="py-3 px-2">
+                            {
+                              <div>
+                                <div className="font-medium">{item.basequantity} {item.measurement}</div>
+                                <div className="text-sm text-gray-500">{item.measurement_hindi}</div>
+                              </div>
+                            }
+                          </td>
                           <td className="py-3 px-2">
                             {editingItem?.id === item.id ? (
                               <Input
@@ -1124,14 +1134,6 @@ export default function ServiceItemsPage() {
                             ) : (
                               <span className="font-mono">{item.quantity}</span>
                             )}
-                          </td>
-                          <td className="py-3 px-2">
-                            {
-                              <div>
-                                <div className="font-medium">{item.measurement}</div>
-                                <div className="text-sm text-gray-500">{item.measurement_hindi}</div>
-                              </div>
-                            }
                           </td>
                           <td className="py-3 px-2">
 

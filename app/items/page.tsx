@@ -850,9 +850,9 @@ export default function ItemsPage() {
                         <th className="text-left py-3 px-2 font-medium text-gray-700">Select</th>
                         {/* <th className="text-left py-3 px-2 font-medium text-gray-700">Service</th> */}
                         <th className="text-left py-3 px-2 font-medium text-gray-700">Item Name</th>
-                        <th className="text-left py-3 px-2 font-medium text-gray-700">Hindi Name</th>
-                        <th className="text-left py-3 px-2 font-medium text-gray-700">Quantity</th>
-                        <th className="text-left py-3 px-2 font-medium text-gray-700">Measurement</th>
+
+                        <th className="text-left py-3 px-2 font-medium text-gray-700">Packing</th>
+
                         <th className="text-left py-3 px-2 font-medium text-gray-700">Status</th>
                         <th className="text-left py-3 px-2 font-medium text-gray-700">Properties</th>
                         <th className="text-left py-3 px-2 font-medium text-gray-700">Actions</th>
@@ -882,41 +882,37 @@ export default function ItemsPage() {
                           </td> */}
                           <td className="py-3 px-2">
                             {editingItem?.id === item.id ? (
-                              <Input
-                                value={editingItem.name}
-                                onChange={(e) => setEditingItem({ ...editingItem, name: e.target.value })}
-                                className="w-full"
-                              />
+                              <>
+                                <Input
+                                  value={editingItem.name}
+                                  onChange={(e) => setEditingItem({ ...editingItem, name: e.target.value })}
+                                  className="w-full"
+                                />
+                                <Input
+                                  value={editingItem.name_hindi}
+                                  onChange={(e) => setEditingItem({ ...editingItem, name_hindi: e.target.value })}
+                                  className="w-full"
+                                />
+                              </>
                             ) : (
-                              <span className="font-medium">{item.name}</span>
+
+                              <div>
+                                <div className="font-medium">{item.name}</div>
+                                <div className="font-medium">{item.name_hindi}</div>
+                              </div>
                             )}
                           </td>
-                          <td className="py-3 px-2">
-                            {editingItem?.id === item.id ? (
-                              <Input
-                                value={editingItem.name_hindi}
-                                onChange={(e) => setEditingItem({ ...editingItem, name_hindi: e.target.value })}
-                                className="w-full"
-                              />
-                            ) : (
-                              <span className="text-gray-600">{item.name_hindi}</span>
-                            )}
-                          </td>
-                          <td className="py-3 px-2">
-                            {editingItem?.id === item.id ? (
-                              <Input
-                                type="number"
-                                value={editingItem.quantity}
-                                onChange={(e) => setEditingItem({ ...editingItem, quantity: parseInt(e.target.value) || 0 })}
-                                className="w-20"
-                              />
-                            ) : (
-                              <span className="font-mono">{item.quantity}</span>
-                            )}
-                          </td>
+
                           <td className="py-3 px-2">
                             {editingItem?.id === item.id ? (
                               <div className="space-y-1">
+                                <Input
+                                  type="number"
+                                  value={editingItem.quantity}
+                                  onChange={(e) => setEditingItem({ ...editingItem, quantity: parseInt(e.target.value) || 0 })}
+                                  className="w-20"
+                                />
+
                                 <select
                                   value={`${editingItem.measurement}|${editingItem.measurement_hindi}`}
                                   onChange={(e) => {
@@ -934,12 +930,14 @@ export default function ItemsPage() {
                                 </select>
                               </div>
                             ) : (
+
                               <div>
-                                <div className="font-medium">{item.measurement}</div>
-                                <div className="text-sm text-gray-500">{item.measurement_hindi}</div>
+                                <div className="font-medium">{item.quantity}</div>
+                                <div className="text-sm text-gray-500">{item.measurement}/{item.measurement_hindi}</div>
                               </div>
                             )}
                           </td>
+
                           <td className="py-3 px-2">
                             {editingItem?.id === item.id ? (
                               <Button
@@ -1307,8 +1305,8 @@ export default function ItemsPage() {
               </div>
             </DialogContent>
           </Dialog>
-        </div>
-      </AdminLayout>
-    </ProtectedRoute>
+        </div >
+      </AdminLayout >
+    </ProtectedRoute >
   );
 }
