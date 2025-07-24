@@ -57,6 +57,7 @@ interface ItemPrice {
   id: string;
   itemName: string;
   quantity: string;
+  measurement: string;
   tierPrices: { [tierId: string]: number };
 }
 
@@ -98,35 +99,35 @@ const INDIAN_STATES = [
 //   }
 // ];
 
-const mockItems: ItemPrice[] = [
-  {
-    id: '1',
-    itemName: 'Wedding Ceremony',
-    quantity: '1 kg',
-    tierPrices: { '1': 8000, '2': 6500, '3': 5000 }
-  },
-  {
-    id: '16',
-    itemName: 'Rajma',
-    quantity: '1 kg',
-    tierPrices: {
-      '1': 10,
-      '2': 20
-    }
-  },
-  {
-    id: '2',
-    itemName: 'Housewarming Puja',
-    quantity: '1 kg',
-    tierPrices: { '1': 3500, '2': 2800, '3': 2000 }
-  },
-  {
-    id: '3',
-    itemName: 'Astrology Consultation',
-    quantity: '1 kg',
-    tierPrices: { '1': 1500, '2': 1200, '3': 1000 }
-  }
-];
+// const mockItems: ItemPrice[] = [
+//   {
+//     id: '1',
+//     itemName: 'Wedding Ceremony',
+//     quantity: '1 kg',
+//     tierPrices: { '1': 8000, '2': 6500, '3': 5000 }
+//   },
+//   {
+//     id: '16',
+//     itemName: 'Rajma',
+//     quantity: '1 kg',
+//     tierPrices: {
+//       '1': 10,
+//       '2': 20
+//     }
+//   },
+//   {
+//     id: '2',
+//     itemName: 'Housewarming Puja',
+//     quantity: '1 kg',
+//     tierPrices: { '1': 3500, '2': 2800, '3': 2000 }
+//   },
+//   {
+//     id: '3',
+//     itemName: 'Astrology Consultation',
+//     quantity: '1 kg',
+//     tierPrices: { '1': 1500, '2': 1200, '3': 1000 }
+//   }
+// ];
 
 export default function TierPricingPage() {
   const [tiers, setTiers] = useState<Tier[]>([]);
@@ -1022,7 +1023,7 @@ export default function TierPricingPage() {
                           <th className="text-left p-3">Id</th>
                           <th className="text-left p-3">Item</th>
 
-
+                          <th className="text-left p-3">Quantity</th>
                           {tiers.map((tier) => (
                             <th key={tier.id} className="text-left p-3">{tier.name}</th>
                           ))}
@@ -1034,7 +1035,7 @@ export default function TierPricingPage() {
                           <tr key={item.id} className="border-b hover:bg-gray-50">
                             <td className="p-3 font-medium">{item.id}</td>
                             <td className="p-3 font-medium">{item.itemName}</td>
-
+                            <td className="p-3 font-medium">{item.quantity}</td>
                             {tiers.map((tier) => (
                               <td key={tier.id} className="p-3">
 

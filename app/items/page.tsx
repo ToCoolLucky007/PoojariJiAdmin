@@ -271,7 +271,12 @@ export default function ItemsPage() {
     canalterquantity: true,
     nondeliverable: false
   });
+  // Filter items
+  const filteredItems = serviceItems.filter(item => {
+    const matchesSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase());
 
+    return matchesSearch;
+  });
   // API function to fetch service items with filters
   const fetchItems = async (filters: {
     search?: string;
@@ -728,14 +733,14 @@ export default function ItemsPage() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div>
-                    <Label htmlFor="search">Search</Label>
+                <div className="flex flex-col sm:flex-row gap-4 mb-6">
+                  <div className="flex-1">
+                    {/* <Label htmlFor="search">Search</Label> */}
                     <div className="relative">
                       <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                       <Input
                         id="search"
-                        placeholder="Search by name, service, or measurement..."
+                        placeholder="Search items"
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                         className="pl-10"
@@ -749,7 +754,7 @@ export default function ItemsPage() {
                 </div>
 
                 {/* Apply Filter Button */}
-                <div className="flex items-center justify-between pt-4 border-t">
+                {/* <div className="flex items-center justify-between pt-4 border-t">
                   <div className="flex items-center space-x-2">
                     <Filter className="w-4 h-4 text-blue-600" />
                     <span className="text-sm font-medium text-blue-900">
@@ -773,7 +778,7 @@ export default function ItemsPage() {
                     )}
                     Apply Filters
                   </Button>
-                </div>
+                </div> */}
 
                 {/* Bulk Actions */}
                 {selectedItems.size > 0 && (
@@ -854,7 +859,7 @@ export default function ItemsPage() {
                       </tr>
                     </thead>
                     <tbody>
-                      {serviceItems.map((item) => (
+                      {filteredItems.map((item) => (
                         <tr key={item.id} className="border-b border-gray-100 hover:bg-gray-50">
                           <td className="py-3 px-2">
                             <Button
