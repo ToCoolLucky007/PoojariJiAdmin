@@ -21,7 +21,8 @@ import {
   IndianRupee,
   RefreshCw,
   Settings,
-  Eye
+  Eye,
+  MessageSquare
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -63,6 +64,11 @@ const navigation: NavigationItem[] = [
     children: [
       { name: 'Order', href: '/order-details', icon: Package },
     ]
+  },
+  {
+    name: 'Feedback',
+    href: '/feedback',
+    icon: MessageSquare
   },
   {
     name: 'Master',
