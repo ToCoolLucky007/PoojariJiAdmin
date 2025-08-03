@@ -435,15 +435,15 @@ export default function FeedbackPage() {
                     </Button>
 
                     <div className="flex items-center space-x-1">
-                      {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                      {Array.from({ length: totalPages }, (_, i) => i + 1).map(pg => (
                         <Button
-                          key={page}
-                          variant={page === page ? "default" : "outline"}
+                          key={pg}
+                          variant={pg === page ? "default" : "outline"}
                           size="sm"
-                          onClick={() => handlePageChange(page)}
+                          onClick={() => handlePageChange(pg)}
                           className="w-8 h-8 p-0"
                         >
-                          {page}
+                          {pg}
                         </Button>
                       ))}
                     </div>
