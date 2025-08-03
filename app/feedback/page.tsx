@@ -110,7 +110,10 @@ export default function FeedbackPage() {
     });
     setPage(1);
   };
-
+  const handlePageChange = (page: number) => {
+    setPage(page);
+    //fetchFeedbacks(page);
+  };
   useEffect(() => {
     handleApplyFilters(); // triggers the first fetch with default filters
   }, []);
