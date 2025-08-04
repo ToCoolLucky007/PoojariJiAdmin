@@ -20,7 +20,9 @@ import {
     XCircle,
     Loader2,
     AlertCircle,
-    User
+    User,
+    FileCheck,
+    UserCheck
 } from 'lucide-react';
 
 interface Service {
@@ -45,10 +47,13 @@ interface ProfileData {
     rituals: string[];
     status: 'active' | 'inactive';
     profile: 'approved' | 'pending' | 'rejected' | 'not submitted';
+    profileapproved: 'pending' | 'approved' | 'rejected';
+    docapproved: 'pending' | 'approved' | 'rejected';
     // Optional fields for different profile types
     about?: string;
     bio?: string;
     experience?: string;
+    rejectreason?: string;
     rating?: number;
     completedProjects?: number;
     skills?: string[];
@@ -62,7 +67,7 @@ interface ProfileDetailModalProps {
     profile: ProfileData | null;
     isOpen: boolean;
     onClose: () => void;
-    onStatusChange?: (consultantId: string, profileId: string, action: 'approve' | 'reject') => void;
+    onStatusChange?: (consultantId: string, profileId: string, action: 'approve' | 'reject', rejectreason: string) => void;
     actionLoading?: string | null;
     title?: string;
     description?: string;
@@ -84,13 +89,18 @@ export default function ProfileDetailModal({
     onActionComplete
 }: ProfileDetailModalProps) {
     const [imageZoom, setImageZoom] = useState<string | null>(null);
-
+    const [newRejectReason, setNewRejectReason] = useState('');
     if (!profile) return null;
 
     const handleStatusChange = async (consultantId: string, profileId: string, action: 'approve' | 'reject') => {
         if (onStatusChange) {
+
+            if (action === 'reject' && newRejectReason.trim() === '') {
+                alert("Rejection reason is required."); // You can replace with toast or error UI
+                return;
+            }
             try {
-                await onStatusChange(consultantId, profileId, action);
+                await onStatusChange(consultantId, profileId, action, newRejectReason.trim());
                 // Call the refresh callback after the action is complete
                 if (onActionComplete) {
                     onActionComplete();
@@ -116,27 +126,50 @@ export default function ProfileDetailModal({
         switch (profileStatus) {
             case 'approved':
                 return <Badge className="bg-green-100 text-green-800 hover:bg-green-100">
-                    <CheckCircle className="w-3 h-3 mr-1" />
+                    <UserCheck className="w-3 h-3 mr-1" />  <CheckCircle className="w-3 h-3 mr-1" />
                     Approved
                 </Badge>;
             case 'rejected':
                 return <Badge variant="destructive">
-                    <XCircle className="w-3 h-3 mr-1" />
+                    <UserCheck className="w-3 h-3 mr-1" /> <XCircle className="w-3 h-3 mr-1" />
                     Rejected
                 </Badge>;
             case 'pending':
                 return <Badge variant="outline" className="bg-orange-50 text-orange-700 border-orange-200">
-                    <Clock className="w-3 h-3 mr-1" />
+                    <UserCheck className="w-3 h-3 mr-1" />   <Clock className="w-3 h-3 mr-1" />
                     Pending
                 </Badge>;
             default:
                 return <Badge variant="outline" className="bg-orange-50 text-orange-700 border-orange-200">
-                    <Clock className="w-3 h-3 mr-1" />
+                    <UserCheck className="w-3 h-3 mr-1" />  <Clock className="w-3 h-3 mr-1" />
                     Not Submitted
                 </Badge>;
         }
     };
-
+    const getDocBadge = (profileStatus: string) => {
+        switch (profileStatus) {
+            case 'approved':
+                return <Badge className="bg-green-100 text-green-800 hover:bg-green-100">
+                    <FileCheck className="w-3 h-3 mr-1" />  <CheckCircle className="w-3 h-3 mr-1" />
+                    Approved
+                </Badge>;
+            case 'rejected':
+                return <Badge variant="destructive">
+                    <FileCheck className="w-3 h-3 mr-1" /> <XCircle className="w-3 h-3 mr-1" />
+                    Rejected
+                </Badge>;
+            case 'pending':
+                return <Badge variant="outline" className="bg-orange-50 text-orange-700 border-orange-200">
+                    <FileCheck className="w-3 h-3 mr-1" />   <Clock className="w-3 h-3 mr-1" />
+                    Pending
+                </Badge>;
+            default:
+                return <Badge variant="outline" className="bg-orange-50 text-orange-700 border-orange-200">
+                    <FileCheck className="w-3 h-3 mr-1" />  <Clock className="w-3 h-3 mr-1" />
+                    Not Submitted
+                </Badge>;
+        }
+    };
     // Group services by name for better display
     const groupServicesByName = (services: Service[]) => {
         const grouped: { [key: string]: Service[] } = {};
@@ -176,7 +209,9 @@ export default function ProfileDetailModal({
                             <div className="flex-1">
                                 <div className="flex items-center space-x-2 mb-2">
                                     <h3 className="text-2xl font-bold text-gray-900">{profile.name}</h3>
-                                    {getProfileBadge(profile.profile)}
+                                    {getProfileBadge(profile.profileapproved)}
+                                    {getDocBadge(profile.docapproved)}
+
                                 </div>
                                 <p className="text-gray-600 mb-1">{profile.email}</p>
                                 <p className="text-gray-600 mb-1">{profile.phone}</p>
@@ -376,6 +411,37 @@ export default function ProfileDetailModal({
                             </div>
                         </div>
 
+                        {/* Last Reject Reason */}
+                        {profile.profile !== 'approved' && (
+                            <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                                <div className="flex flex-col space-y-4">
+
+                                    {/* Last Reject Reason */}
+                                    <div>
+                                        <h4 className="font-medium text-gray-900 mb-1">Last Reject Reason</h4>
+                                        <p className="text-sm text-gray-700">{profile.rejectreason}</p>
+                                    </div>
+                                    {profile.profile == 'pending' && (
+
+                                        < div >
+                                            <label className="block text-sm font-medium text-gray-800 mb-1">
+                                                Enter new reason
+                                            </label>
+                                            <textarea
+                                                className="w-[600px] max-w-full p-2 border border-gray-300 rounded text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-500"
+                                                rows={3}
+                                                value={newRejectReason || ""}
+                                                onChange={(e) => setNewRejectReason(e.target.value)}
+                                                placeholder="Enter reason for rejection"
+                                            />
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        )}
+
+
+
                         {/* Profile Status Warning */}
                         {profile.profile !== 'approved' && (
                             <div className="bg-orange-50 p-4 rounded-lg border border-orange-200">
@@ -395,9 +461,8 @@ export default function ProfileDetailModal({
                                 </div>
                             </div>
                         )}
-
                         {/* Action Buttons */}
-                        {showActions && profile.profile === 'pending' && onStatusChange && (
+                        {showActions && (profile.profileapproved === 'pending' || profile.docapproved === 'pending') && onStatusChange && (
                             <div className="flex justify-end space-x-3 pt-4 border-t">
                                 <Button
                                     variant="outline"
@@ -428,10 +493,11 @@ export default function ProfileDetailModal({
                         )}
                     </div>
                 </DialogContent>
-            </Dialog>
+            </Dialog >
 
             {/* Image Zoom Modal */}
-            <Dialog open={!!imageZoom} onOpenChange={() => setImageZoom(null)}>
+            < Dialog open={!!imageZoom
+            } onOpenChange={() => setImageZoom(null)}>
                 <DialogContent className="sm:max-w-2xl p-0 bg-transparent border-0 shadow-none">
                     <div className="relative">
                         <Button
@@ -451,7 +517,7 @@ export default function ProfileDetailModal({
                         )}
                     </div>
                 </DialogContent>
-            </Dialog>
+            </Dialog >
         </>
     );
 }

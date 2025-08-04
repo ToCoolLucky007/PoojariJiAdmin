@@ -28,7 +28,8 @@ import {
   AlertCircle,
   UserCheck,
   Globe,
-  Sparkles
+  Sparkles,
+  FileCheck
 } from 'lucide-react';
 import { TimePeriod, getDateRangeForPeriod, filterDataByDateRange, calculatePeriodComparison } from '@/lib/date-utils';
 
@@ -54,6 +55,8 @@ interface Freelancer {
   lastActive: string;
   status: 'active' | 'inactive';
   profile: 'approved' | 'pending' | 'rejected' | 'not submitted';
+  profileapproved: 'pending' | 'approved' | 'rejected';
+  docapproved: 'pending' | 'approved' | 'rejected';
   bio: string;
   profileCompleted: boolean;
   languages: string[];
@@ -361,28 +364,37 @@ export default function FreelancerDetailsPage() {
     switch (profileStatus) {
       case 'approved':
         return <Badge className="bg-green-100 text-green-800 hover:bg-green-100">
-          <CheckCircle className="w-3 h-3 mr-1" />
+          <UserCheck className="w-3 h-3 mr-1" /><CheckCircle className="w-3 h-3 mr-1" />
           Approved
         </Badge>;
       case 'rejected':
         return <Badge variant="destructive">
-          <XCircle className="w-3 h-3 mr-1" />
+          <UserCheck className="w-3 h-3 mr-1" /> <XCircle className="w-3 h-3 mr-1" />
           Rejected
         </Badge>;
       case 'pending':
         return <Badge variant="outline" className="bg-orange-50 text-orange-700 border-orange-200">
-          <Clock className="w-3 h-3 mr-1" />
+          <UserCheck className="w-3 h-3 mr-1" /><Clock className="w-3 h-3 mr-1" />
           Pending
         </Badge>;
       default:
         return <Badge variant="outline" className="bg-orange-50 text-orange-700 border-orange-200">
-          <Clock className="w-3 h-3 mr-1" />
+          <UserCheck className="w-3 h-3 mr-1" /><Clock className="w-3 h-3 mr-1" />
           Not Submitted
         </Badge>;
     }
   };
 
-
+  const getDocBadge = (profile: string) => {
+    switch (profile) {
+      case 'approved':
+        return <Badge className="bg-green-100 text-green-800 hover:bg-green-100"><FileCheck className="w-3 h-3 mr-1" /><CheckCircle className="w-3 h-3 mr-1" /> Approved</Badge>;
+      case 'rejected':
+        return <Badge variant="destructive"><FileCheck className="w-3 h-3 mr-1" /><XCircle className="w-3 h-3 mr-1" /> Rejected</Badge>;
+      default:
+        return <Badge variant="secondary" className="bg-orange-50 text-orange-700 border-orange-200"><FileCheck className="w-3 h-3 mr-1" /><Clock className="w-3 h-3 mr-1" /> Pending</Badge>;
+    }
+  };
   // Calculate stats for filtered data
   const totalFreelancers = filteredFreelancers.length;
   const approvedProfiles = filteredFreelancers.filter(f => f.profile === 'approved').length;
@@ -582,7 +594,8 @@ export default function FreelancerDetailsPage() {
                       <div>
                         <div className="flex items-center space-x-2 mb-1">
                           <h3 className="text-lg font-semibold text-gray-900">{freelancer.name}</h3>
-                          {getProfileBadge(freelancer.profile)}
+                          {getProfileBadge(freelancer.profileapproved)}
+                          {getDocBadge(freelancer.docapproved)}
                         </div>
                         <p className="text-sm text-gray-600">{freelancer.email}</p>
                         <p className="text-sm text-gray-500">

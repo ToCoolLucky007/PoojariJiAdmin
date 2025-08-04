@@ -23,7 +23,10 @@ import {
   Calendar,
   Globe,
   Sparkles,
-  User
+  User,
+  Filter,
+  ChevronLeft,
+  ChevronRight, UserCheck, FileCheck
 } from 'lucide-react';
 
 interface Consultant {
@@ -39,9 +42,12 @@ interface Consultant {
   idDocument: string;
   idDocumentImage: string;
   submittedDate: string;
+  profileapproved: 'pending' | 'approved' | 'rejected';
+  docapproved: 'pending' | 'approved' | 'rejected';
   profile: 'pending' | 'approved' | 'rejected';
   skills: string[];
   experience: string;
+  rejectreason: string;
   languages: string[];
   rituals: string[];
   status: 'active' | 'inactive';
@@ -140,14 +146,21 @@ export default function ConsultantVerificationPage() {
   const [selectedConsultant, setSelectedConsultant] = useState<Consultant | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [profileFilter, setProfileFilter] = useState<string>('all');
+  const [profileFilter, setProfileFilter] = useState<string>('2');
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [actionResult, setActionResult] = useState<{ type: 'success' | 'error', message: string } | null>(null);
+  const [totalCount, setTotalCount] = useState(0);
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(10);
 
+  // Filter state for apply button
+  const [tempSearchTerm, setTempSearchTerm] = useState('');
+  const [tempProfileFilter, setTempProfileFilter] = useState<string>('2');
 
   const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
 
-  const fetchConsultants = async () => {
+  const fetchConsultants = async (page: number = 1, search: string = '', profile: string = '2') => {
     try {
       setIsLoading(true);
 
@@ -157,7 +170,18 @@ export default function ConsultantVerificationPage() {
         return;
       }
       const [startDate, endDate] = [new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], new Date().toISOString().split('T')[0]];
-      const response = await fetch(`${baseUrl}/api/admin/consultants?vsub=1&startdate=${startDate}&enddate=${endDate}`, {
+
+      // Build query parameters
+      const params = new URLSearchParams({
+        page: page.toString(),
+        limit: itemsPerPage.toString(),
+        vsub: profileFilter,
+        profile: profile !== 'all' ? profile : '',
+        search: search,
+        startdate: startDate,
+        enddate: endDate
+      });
+      const response = await fetch(`${baseUrl}/api/admin/consultants?${params.toString()}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -169,16 +193,19 @@ export default function ConsultantVerificationPage() {
 
       if (response.ok && data.success && Array.isArray(data.data)) {
         setConsultants(data.data);
-        setFilteredConsultants(data.data);
+        setTotalCount(data.totalCount || data.data.length);
+        //setFilteredConsultants(data.data);
       } else {
         console.error('Failed to fetch consultants:', data.message || 'Unknown error');
         setConsultants([]);
-        setFilteredConsultants([]);
+        setTotalCount(0);
+        //setFilteredConsultants([]);
       }
     } catch (error) {
       console.error('Error fetching consultants:', error);
       setConsultants([]);
-      setFilteredConsultants([]);
+      setTotalCount(0);
+      // setFilteredConsultants([]);
     } finally {
       setIsLoading(false);
     }
@@ -187,9 +214,32 @@ export default function ConsultantVerificationPage() {
   useEffect(() => {
 
 
-    fetchConsultants();
+    fetchConsultants(1, searchTerm, profileFilter);
   }, []);
 
+  // Handle apply filters
+  const handleApplyFilters = () => {
+    setSearchTerm(searchTerm);
+    setProfileFilter(profileFilter);
+    setCurrentPage(1);
+    fetchConsultants(1, searchTerm, profileFilter);
+  };
+
+  // Handle page change
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    fetchConsultants(page, searchTerm, profileFilter);
+  };
+
+  // Clear filters
+  const handleClearFilters = () => {
+    setSearchTerm('');
+    //setTempProfileFilter('pending');
+    setSearchTerm('');
+    setProfileFilter('pendin2g');
+    setCurrentPage(1);
+    fetchConsultants(1, '', '2');
+  };
   useEffect(() => {
     let filtered = consultants;
 
@@ -204,10 +254,10 @@ export default function ConsultantVerificationPage() {
       filtered = filtered.filter(consultant => consultant.profile === profileFilter);
     }
 
-    setFilteredConsultants(filtered);
+    //setFilteredConsultants(filtered);
   }, [searchTerm, profileFilter, consultants]);
 
-  const handleStatusChange = async (consultantId: string, profileId: string, action: 'approve' | 'reject') => {
+  const handleStatusChange = async (consultantId: string, profileId: string, action: 'approve' | 'reject', rejectreason: string) => {
     setActionLoading(consultantId);
     setActionResult(null);
 
@@ -228,7 +278,8 @@ export default function ConsultantVerificationPage() {
         body: JSON.stringify({
           consultantid: consultantId,
           profileid: profileId, // If `profileid` is different, update this accordingly
-          isapproved
+          isapproved,
+          rejectreason
         })
       });
 
@@ -269,16 +320,32 @@ export default function ConsultantVerificationPage() {
 
   const handleActionComplete = () => {
     // Refresh the data after an action is completed
-    fetchConsultants();
+    fetchConsultants(currentPage, searchTerm, profileFilter);
   };
+
+  // Pagination calculations
+  const totalPages = Math.ceil(totalCount / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage + 1;
+  const endIndex = Math.min(startIndex + itemsPerPage - 1, totalCount);
+
   const getProfileBadge = (profile: string) => {
     switch (profile) {
       case 'approved':
-        return <Badge className="bg-green-100 text-green-800 hover:bg-green-100"><CheckCircle className="w-3 h-3 mr-1" />Approved</Badge>;
+        return <Badge className="bg-green-100 text-green-800 hover:bg-green-100"><UserCheck className="w-3 h-3 mr-1" /><CheckCircle className="w-3 h-3 mr-1" />   Approved</Badge>;
       case 'rejected':
-        return <Badge variant="destructive"><XCircle className="w-3 h-3 mr-1" />Rejected</Badge>;
+        return <Badge variant="destructive"><UserCheck className="w-3 h-3 mr-1" /><XCircle className="w-3 h-3 mr-1" />Rejected</Badge>;
       default:
-        return <Badge variant="secondary"><Clock className="w-3 h-3 mr-1" />Pending</Badge>;
+        return <Badge variant="secondary" className="bg-orange-50 text-orange-700 border-orange-200"><UserCheck className="w-3 h-3 mr-1" /><Clock className="w-3 h-3 mr-1" /> Pending</Badge>;
+    }
+  };
+  const getDocBadge = (profile: string) => {
+    switch (profile) {
+      case 'approved':
+        return <Badge className="bg-green-100 text-green-800 hover:bg-green-100"><FileCheck className="w-3 h-3 mr-1" /><CheckCircle className="w-3 h-3 mr-1" /> Approved</Badge>;
+      case 'rejected':
+        return <Badge variant="destructive"><FileCheck className="w-3 h-3 mr-1" /><XCircle className="w-3 h-3 mr-1" /> Rejected</Badge>;
+      default:
+        return <Badge variant="secondary" className="bg-orange-50 text-orange-700 border-orange-200"><FileCheck className="w-3 h-3 mr-1" /><Clock className="w-3 h-3 mr-1" /> Pending</Badge>;
     }
   };
 
@@ -321,7 +388,7 @@ export default function ConsultantVerificationPage() {
               Freelancer Verification
             </h1>
             <Badge variant="outline" className="text-lg px-3 py-1">
-              {filteredConsultants.length} Applications
+              {totalCount} Applications
             </Badge>
           </div>
 
@@ -361,17 +428,32 @@ export default function ConsultantVerificationPage() {
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     <option value="all">All Profiles</option>
-                    <option value="pending">Pending</option>
-                    <option value="approved">Approved</option>
-                    <option value="rejected">Rejected</option>
+                    <option value="2">Pending</option>
+                    <option value="1">Approved</option>
+                    <option value="3">Rejected</option>
                   </select>
+                </div>
+                <div className="flex items-end gap-2">
+                  <Button
+                    onClick={handleApplyFilters}
+                    className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+                  >
+                    <Filter className="w-4 h-4 mr-2" />
+                    Apply Filter
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={handleClearFilters}
+                  >
+                    Clear
+                  </Button>
                 </div>
               </div>
             </CardContent>
           </Card>
 
           <div className="grid gap-4">
-            {filteredConsultants.map((consultant) => (
+            {consultants.map((consultant) => (
               <Card key={consultant.id} className="bg-white/80 backdrop-blur-xl border-0 shadow-xl hover:shadow-2xl transition-all duration-300">
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between">
@@ -400,7 +482,8 @@ export default function ConsultantVerificationPage() {
                       </div>
                     </div>
                     <div className="flex items-center space-x-3">
-                      {getProfileBadge(consultant.profile)}
+                      {getProfileBadge(consultant.profileapproved)}
+                      {getDocBadge(consultant.docapproved)}
                       <Button
                         variant="outline"
                         size="sm"
@@ -416,7 +499,7 @@ export default function ConsultantVerificationPage() {
             ))}
           </div>
 
-          {filteredConsultants.length === 0 && (
+          {consultants.length === 0 && (
             <Card className="bg-white/80 backdrop-blur-xl border-0 shadow-xl">
               <CardContent className="p-12 text-center">
                 <User className="h-12 w-12 text-gray-400 mx-auto mb-4" />
@@ -425,7 +508,55 @@ export default function ConsultantVerificationPage() {
               </CardContent>
             </Card>
           )}
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <Card className="bg-white/80 backdrop-blur-xl border-0 shadow-xl">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div className="text-sm text-gray-600">
+                    Showing {startIndex} to {endIndex} of {totalCount} results
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handlePageChange(Math.max(currentPage - 1, 1))}
+                      disabled={currentPage === 1}
+                    >
+                      <ChevronLeft className="h-4 w-4" />
+                      Previous
+                    </Button>
 
+                    {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                      const page = i + Math.max(1, currentPage - 2);
+                      if (page > totalPages) return null;
+                      return (
+                        <Button
+                          key={page}
+                          variant={currentPage === page ? "default" : "outline"}
+                          size="sm"
+                          onClick={() => handlePageChange(page)}
+                          className="w-8 h-8 p-0"
+                        >
+                          {page}
+                        </Button>
+                      );
+                    })}
+
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handlePageChange(Math.min(currentPage + 1, totalPages))}
+                      disabled={currentPage === totalPages}
+                    >
+                      Next
+                      <ChevronRight className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
           {/* Profile Detail Modal */}
           <ProfileDetailModal
             profile={selectedConsultant}
