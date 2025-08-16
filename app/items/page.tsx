@@ -949,7 +949,7 @@ export default function ItemsPage() {
                               <>
                                 <Input
                                   value={editingItem.cgst}
-                                  onChange={(e) => setEditingItem({ ...editingItem, cgst: e.target.value })}
+                                  onChange={(e) => setEditingItem({ ...editingItem, cgst: parseInt(e.target.value) })}
                                   className="w-full"
                                 />
 
@@ -967,7 +967,7 @@ export default function ItemsPage() {
                               <>
                                 <Input
                                   value={editingItem.sgst}
-                                  onChange={(e) => setEditingItem({ ...editingItem, sgst: e.target.value })}
+                                  onChange={(e) => setEditingItem({ ...editingItem, sgst: parseInt(e.target.value) })}
                                   className="w-full"
                                 />
 
