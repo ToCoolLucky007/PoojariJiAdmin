@@ -59,6 +59,8 @@ interface ServiceItem {
   quantity: number;
   measurement: string;
   measurement_hindi: string;
+  cgst: number;
+  sgst: number;
   isactive: boolean;
   canalterquantity: boolean;
   nondeliverable: boolean;
@@ -417,6 +419,8 @@ export default function ItemsPage() {
       quantity: editingItem.quantity,
       measurement: editingItem.measurement,
       measurement_hindi: editingItem.measurement_hindi,
+      cgst: editingItem.cgst,
+      sgst: editingItem.sgst,
       isactive: editingItem.isactive ? 1 : 0,
       canalterquantity: editingItem.canalterquantity ? 1 : 0,
       nondeliverable: editingItem.nondeliverable ? 1 : 0,
@@ -468,7 +472,7 @@ export default function ItemsPage() {
 
   // Handle adding new item
   const handleAddItem = async () => {
-    if (!newItem.name || !newItem.quantity || !newItem.measurement || !newItem.name_hindi) {
+    if (!newItem.name || !newItem.quantity || !newItem.measurement || !newItem.name_hindi || !newItem.cgst || !newItem.sgst) {
       setActionResult({ type: 'error', message: 'Please fill in required fields.' });
       return;
     }
@@ -487,6 +491,8 @@ export default function ItemsPage() {
       quantity: newItem.quantity,
       measurement: newItem.measurement,
       measurement_hindi: newItem.measurement_hindi,
+      cgst: newItem.cgst,
+      sgst: newItem.sgst,
       isactive: newItem.isactive ? 1 : 0,
       canalterquantity: newItem.canalterquantity ? 1 : 0,
       nondeliverable: newItem.nondeliverable ? 1 : 0,
@@ -850,9 +856,9 @@ export default function ItemsPage() {
                         <th className="text-left py-3 px-2 font-medium text-gray-700">Select</th>
                         {/* <th className="text-left py-3 px-2 font-medium text-gray-700">Service</th> */}
                         <th className="text-left py-3 px-2 font-medium text-gray-700">Item Name</th>
-
                         <th className="text-left py-3 px-2 font-medium text-gray-700">Packing</th>
-
+                        <th className="text-left py-3 px-2 font-medium text-gray-700">CGST</th>
+                        <th className="text-left py-3 px-2 font-medium text-gray-700">SGST</th>
                         <th className="text-left py-3 px-2 font-medium text-gray-700">Status</th>
                         <th className="text-left py-3 px-2 font-medium text-gray-700">Properties</th>
                         <th className="text-left py-3 px-2 font-medium text-gray-700">Actions</th>
@@ -938,6 +944,42 @@ export default function ItemsPage() {
                             )}
                           </td>
 
+                          <td className="py-3 px-2">
+                            {editingItem?.id === item.id ? (
+                              <>
+                                <Input
+                                  value={editingItem.cgst}
+                                  onChange={(e) => setEditingItem({ ...editingItem, cgst: e.target.value })}
+                                  className="w-full"
+                                />
+
+                              </>
+                            ) : (
+
+                              <div>
+                                <div className="font-medium">{item.cgst}</div>
+
+                              </div>
+                            )}
+                          </td>
+                          <td className="py-3 px-2">
+                            {editingItem?.id === item.id ? (
+                              <>
+                                <Input
+                                  value={editingItem.sgst}
+                                  onChange={(e) => setEditingItem({ ...editingItem, sgst: e.target.value })}
+                                  className="w-full"
+                                />
+
+                              </>
+                            ) : (
+
+                              <div>
+                                <div className="font-medium">{item.sgst}</div>
+
+                              </div>
+                            )}
+                          </td>
                           <td className="py-3 px-2">
                             {editingItem?.id === item.id ? (
                               <Button
@@ -1111,6 +1153,29 @@ export default function ItemsPage() {
                     </select>
                   </div>
                 </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="cgst">CGST</Label>
+                    <Input
+                      id="cgst"
+                      type="number"
+                      value={newItem.cgst}
+                      onChange={(e) => setNewItem({ ...newItem, cgst: parseInt(e.target.value) || 1 })}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="sgst">SGST</Label>
+                    <Input
+                      id="sgst"
+                      type="number"
+                      value={newItem.sgst}
+                      onChange={(e) => setNewItem({ ...newItem, sgst: parseInt(e.target.value) || 1 })}
+                    />
+                  </div>
+                </div>
+
+
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="flex items-center space-x-2">
                     <input
