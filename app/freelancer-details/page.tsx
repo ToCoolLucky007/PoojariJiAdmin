@@ -64,6 +64,7 @@ interface Freelancer {
   services: Service[];
   identificationNumber: string;
   idType: string;
+  pan: string;
   idDocument: string;
   idDocumentFrontImage: string;
   idDocumentBackImage: string;
