@@ -40,9 +40,11 @@ interface ProfileData {
     phone: string;
     profileImage: string;
     identificationNumber: string;
+    pan: string;
     idType: string;
     idDocument: string;
-    idDocumentImage: string;
+    idDocumentFrontImage: string;
+    idDocumentBackImage: string;
     languages: string[];
     rituals: string[];
     status: 'active' | 'inactive';
@@ -338,30 +340,56 @@ export default function ProfileDetailModal({
                                         <span className="text-sm text-gray-500">ID Number:</span>
                                         <p className="font-mono font-medium">{profile.identificationNumber}</p>
                                     </div>
-                                    <div>
-                                        <span className="text-sm text-gray-500">Document File:</span>
-                                        <p className="text-blue-600 underline cursor-pointer text-sm">{profile.idDocument}</p>
+                                    <div className="mb-3">
+                                        <span className="text-sm text-gray-500">PAN:</span>
+                                        <p className="font-mono font-medium">{profile.pan}</p>
                                     </div>
                                 </div>
 
                                 <div className="bg-white p-4 rounded border">
                                     <div className="mb-3">
-                                        <span className="text-sm text-gray-500 block mb-2">Document Image:</span>
-                                        <div className="relative group">
-                                            <img
-                                                src={profile.idDocumentImage}
-                                                alt={`${profile.idType} Document`}
-                                                className="w-full h-32 object-cover rounded border cursor-pointer hover:shadow-lg transition-shadow duration-200"
-                                                onClick={() => setImageZoom(profile.idDocumentImage)}
-                                            />
-                                            <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-black/20 rounded cursor-pointer"
-                                                onClick={() => setImageZoom(profile.idDocumentImage)}>
-                                                <ZoomIn className="h-6 w-6 text-white" />
+                                        <span className="text-sm text-gray-500 block mb-2">Document Images:</span>
+                                        <div className="grid grid-cols-2 gap-4">
+
+                                            {/* Front Side */}
+                                            <div className="relative group">
+                                                <img
+                                                    src={profile.idDocumentFrontImage}
+                                                    alt={`${profile.idType} Document Front`}
+                                                    className="w-full h-32 object-cover rounded border cursor-pointer hover:shadow-lg transition-shadow duration-200"
+                                                    onClick={() => setImageZoom(profile.idDocumentFrontImage)}
+                                                />
+                                                <div
+                                                    className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-black/20 rounded cursor-pointer"
+                                                    onClick={() => setImageZoom(profile.idDocumentFrontImage)}
+                                                >
+                                                    <ZoomIn className="h-6 w-6 text-white" />
+                                                </div>
+                                                <p className="text-xs text-gray-500 mt-1 text-center">Front Side</p>
                                             </div>
+
+                                            {/* Back Side */}
+                                            <div className="relative group">
+                                                <img
+                                                    src={profile.idDocumentBackImage}
+                                                    alt={`${profile.idType} Document Back`}
+                                                    className="w-full h-32 object-cover rounded border cursor-pointer hover:shadow-lg transition-shadow duration-200"
+                                                    onClick={() => setImageZoom(profile.idDocumentBackImage)}
+                                                />
+                                                <div
+                                                    className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-black/20 rounded cursor-pointer"
+                                                    onClick={() => setImageZoom(profile.idDocumentBackImage)}
+                                                >
+                                                    <ZoomIn className="h-6 w-6 text-white" />
+                                                </div>
+                                                <p className="text-xs text-gray-500 mt-1 text-center">Back Side</p>
+                                            </div>
+
                                         </div>
                                         <p className="text-xs text-gray-500 mt-2">Click to view full size</p>
                                     </div>
                                 </div>
+
                             </div>
                         </div>
 

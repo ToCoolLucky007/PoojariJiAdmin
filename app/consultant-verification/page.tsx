@@ -38,9 +38,11 @@ interface Consultant {
   about: string;
   profileImage: string;
   identificationNumber: string;
+  pan: string;
   idType: string;
   idDocument: string;
-  idDocumentImage: string;
+  idDocumentFrontImage: string;
+  idDocumentBackImage: string;
   submittedDate: string;
   profileapproved: 'pending' | 'approved' | 'rejected';
   docapproved: 'pending' | 'approved' | 'rejected';

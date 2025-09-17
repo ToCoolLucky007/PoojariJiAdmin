@@ -65,7 +65,8 @@ interface Freelancer {
   identificationNumber: string;
   idType: string;
   idDocument: string;
-  idDocumentImage: string;
+  idDocumentFrontImage: string;
+  idDocumentBackImage: string;
 }
 
 // Mock data with updated structure for location-based pricing and ID documents
