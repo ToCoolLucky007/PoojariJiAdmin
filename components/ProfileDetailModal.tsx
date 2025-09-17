@@ -218,7 +218,9 @@ export default function ProfileDetailModal({
                                 <p className="text-gray-600 mb-1">{profile.email}</p>
                                 <p className="text-gray-600 mb-1">{profile.phone}</p>
                                 {profile.experience && (
-                                    <p className="text-sm text-gray-500 mb-3">Experience: {profile.experience}</p>
+                                    <p className="text-sm text-gray-500 mb-3">
+                                        Experience: {profile.experience} years
+                                    </p>
                                 )}
                                 <div className="flex items-center space-x-2">
                                     {/* <Badge variant="outline" className="bg-blue-50 text-blue-700">
