@@ -472,7 +472,7 @@ export default function ConsultantVerificationPage() {
                           <Calendar className="w-3 h-3 inline mr-1" />
                           Submitted: {new Date(consultant.submittedDate).toLocaleDateString()}
                         </p>
-                        <p className="text-sm text-gray-500">Experience: {consultant.experience}</p>
+                        <p className="text-sm text-gray-500">Experience: {consultant.experience} years</p>
                         {/* <div className="flex flex-wrap gap-1 mt-2">
                           {consultant.skills.slice(0, 3).map((skill) => (
                             <Badge key={skill} variant="outline" className="text-xs">{skill}</Badge>
