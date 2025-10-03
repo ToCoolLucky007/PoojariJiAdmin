@@ -883,9 +883,9 @@ export default function ItemsPage() {
                             </Button>
                           </td>
                           <td className="py-3 px-2">
-                            <Badge variant="outline" className="text-xs">
-                              {item.id}
-                            </Badge>
+
+                            {item.id}
+
                           </td>
                           <td className="py-3 px-2">
                             {editingItem?.id === item.id ? (
