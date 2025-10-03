@@ -855,6 +855,7 @@ export default function ItemsPage() {
                       <tr className="border-b border-gray-200">
                         <th className="text-left py-3 px-2 font-medium text-gray-700">Select</th>
                         {/* <th className="text-left py-3 px-2 font-medium text-gray-700">Service</th> */}
+                        <th className="text-left py-3 px-2 font-medium text-gray-700">ID</th>
                         <th className="text-left py-3 px-2 font-medium text-gray-700">Item Name</th>
                         <th className="text-left py-3 px-2 font-medium text-gray-700">Packing</th>
                         <th className="text-left py-3 px-2 font-medium text-gray-700">CGST</th>
@@ -881,11 +882,11 @@ export default function ItemsPage() {
                               )}
                             </Button>
                           </td>
-                          {/* <td className="py-3 px-2">
+                          <td className="py-3 px-2">
                             <Badge variant="outline" className="text-xs">
-                              {item.serviceName}
+                              {item.id}
                             </Badge>
-                          </td> */}
+                          </td>
                           <td className="py-3 px-2">
                             {editingItem?.id === item.id ? (
                               <>
