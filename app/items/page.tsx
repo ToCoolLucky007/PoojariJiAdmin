@@ -1059,14 +1059,14 @@ export default function ItemsPage() {
                                 >
                                   <Edit className="w-3 h-3" />
                                 </Button>
-                                <Button
+                                {/* <Button
                                   variant="outline"
                                   size="sm"
                                   onClick={() => handleDeleteItem(item.id)}
                                   className="hover:bg-red-50 hover:border-red-200"
                                 >
                                   <Trash2 className="w-3 h-3" />
-                                </Button>
+                                </Button> */}
                               </div>
                             )}
                           </td>
