@@ -1,4 +1,5 @@
 'use client';
+import { Role } from '@/types/auth';
 import { Key } from 'lucide-react';
 import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
@@ -28,10 +29,13 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 
+
+
 interface NavigationItem {
   name: string;
   href?: string;
   icon: any;
+  roles: Role[];
   children?: NavigationItem[];
 }
 
@@ -39,44 +43,50 @@ const navigation: NavigationItem[] = [
   {
     name: 'Dashboard',
     href: '/dashboard',
-    icon: BarChart3
+    icon: BarChart3,
+    roles: ['admin', 'user'],
   },
   {
     name: 'Freelancer',
     icon: Users,
+    roles: ['admin', 'user'],
     children: [
-      { name: 'Verification', href: '/consultant-verification', icon: UserCheck },
-      { name: 'Detail', href: '/freelancer-details', icon: Eye },
-      { name: 'Withdrawal', href: '/withdrawal-requests', icon: Banknote },
+      { name: 'Verification', href: '/consultant-verification', icon: UserCheck, roles: ['admin', 'user'], },
+      { name: 'Detail', href: '/freelancer-details', icon: Eye, roles: ['admin', 'user'], },
+      { name: 'Withdrawal', href: '/withdrawal-requests', icon: Banknote, roles: ['admin'], },
     ]
   },
   {
     name: 'Consumer',
     icon: User,
+    roles: ['admin'],
     children: [
-      { name: 'Detail', href: '/consumer-details', icon: Eye },
-      { name: 'Refund', href: '/cancelled-orders', icon: RefreshCw },
+      { name: 'Detail', href: '/consumer-details', icon: Eye, roles: ['admin'] },
+      { name: 'Refund', href: '/cancelled-orders', icon: RefreshCw, roles: ['admin'] },
     ]
   },
   {
     name: 'Order',
     icon: ShoppingCart,
+    roles: ['admin'],
     children: [
-      { name: 'Order', href: '/order-details', icon: Package },
+      { name: 'Order', href: '/order-details', icon: Package, roles: ['admin'] },
     ]
   },
   {
     name: 'Feedback',
     href: '/feedback',
-    icon: MessageSquare
+    icon: MessageSquare,
+    roles: ['admin']
   },
   {
     name: 'Master',
     icon: Settings,
+    roles: ['admin'],
     children: [
-      { name: 'Manage Items', href: '/items', icon: Package },
-      { name: 'Manage Prices', href: '/tier-pricing', icon: IndianRupee },
-      { name: 'Service Items', href: '/service-items', icon: Package },
+      { name: 'Manage Items', href: '/items', icon: Package, roles: ['admin'] },
+      { name: 'Manage Prices', href: '/tier-pricing', icon: IndianRupee, roles: ['admin'] },
+      { name: 'Service Items', href: '/service-items', icon: Package, roles: ['admin'] },
     ]
   },
 ];
@@ -84,13 +94,31 @@ const navigation: NavigationItem[] = [
 interface AdminLayoutProps {
   children: React.ReactNode;
 }
+const filterNavigationByRole = (
+  items: NavigationItem[],
+  role: Role
+): NavigationItem[] => {
+  return items
+    .filter(item => item.roles.includes(role))
+    .map(item => ({
+      ...item,
+      children: item.children
+        ? item.children.filter(child => child.roles.includes(role))
+        : undefined,
+    }))
+    .filter(item => !item.children || item.children.length > 0);
+};
 
 export default function AdminLayout({ children }: AdminLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [expandedMenus, setExpandedMenus] = useState<string[]>([]);
   const { user, logout } = useAuth();
   const pathname = usePathname();
+  const userRole: Role = user?.role || 'user';
+
   const [userMenuOpen, setUserMenuOpen] = useState(false);
+
+  const filteredNavigation = filterNavigationByRole(navigation, userRole);
   // Auto-expand parent menu if child is active
   useState(() => {
     navigation.forEach(item => {
@@ -219,7 +247,9 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
 
           {/* Navigation */}
           <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
-            {navigation.map(item => renderNavigationItem(item))}
+
+
+            {filteredNavigation.map(item => renderNavigationItem(item))}
           </nav>
 
           {/* User section */}

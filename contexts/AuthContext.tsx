@@ -1,12 +1,12 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-
+import { Role } from '@/types/auth';
 interface User {
   id: string;
   email: string;
   name: string;
-  role: string;
+  role: Role;
 }
 
 interface AuthContextType {
