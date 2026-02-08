@@ -610,7 +610,7 @@ export default function FreelancerDetailsPage() {
                             <span className="text-sm font-medium">{freelancer.rating}</span>
                           </div>
                           <span className="text-sm text-gray-500">{freelancer.completedProjects} orders</span>
-                          <span className="text-sm font-medium text-green-600">{freelancer.services.length} services</span>
+                          <span className="text-sm font-medium text-green-600"> {freelancer.services?.length ?? 0} services</span>
                         </div>
                         <div className="flex flex-wrap gap-1 mt-2">
                           {freelancer.languages.slice(0, 3).map((language) => (
