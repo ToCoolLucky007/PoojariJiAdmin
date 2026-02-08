@@ -1,5 +1,5 @@
 'use client';
-
+import { Key } from 'lucide-react';
 import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -90,7 +90,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   const [expandedMenus, setExpandedMenus] = useState<string[]>([]);
   const { user, logout } = useAuth();
   const pathname = usePathname();
-
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
   // Auto-expand parent menu if child is active
   useState(() => {
     navigation.forEach(item => {
@@ -223,28 +223,51 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
           </nav>
 
           {/* User section */}
-          <div className="p-4 border-t border-gray-200/50">
-            <div className="flex items-center mb-3">
-              <div className="flex-shrink-0">
+          <div className="p-4 border-t border-gray-200/50 relative">
+            {/* User Info */}
+            <button
+              onClick={() => setUserMenuOpen(prev => !prev)}
+              className="w-full flex items-center justify-between rounded-lg p-2 hover:bg-gray-100 transition"
+            >
+              <div className="flex items-center">
                 <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full flex items-center justify-center">
                   <User className="h-4 w-4 text-white" />
                 </div>
+                <div className="ml-3 text-left">
+                  <p className="text-sm font-medium text-gray-900">{user?.name}</p>
+                  <p className="text-xs text-gray-500">{user?.email}</p>
+                </div>
               </div>
-              <div className="ml-3">
-                <p className="text-sm font-medium text-gray-900">{user?.name}</p>
-                <p className="text-xs text-gray-500">{user?.email}</p>
+              <ChevronDown
+                className={cn(
+                  "h-4 w-4 transition-transform",
+                  userMenuOpen && "rotate-180"
+                )}
+              />
+            </button>
+
+            {/* Dropdown */}
+            {userMenuOpen && (
+              <div className="mt-2 space-y-1 rounded-lg border bg-white shadow-lg p-2">
+                <Link
+                  href="/change-password"
+                  className="flex items-center gap-2 px-3 py-2 text-sm rounded-md hover:bg-gray-100 text-gray-700"
+                >
+                  <Key className="h-4 w-4" />
+                  Change Password
+                </Link>
+
+                <button
+                  onClick={logout}
+                  className="w-full flex items-center gap-2 px-3 py-2 text-sm rounded-md hover:bg-red-50 text-red-600"
+                >
+                  <LogOut className="h-4 w-4" />
+                  Sign out
+                </button>
               </div>
-            </div>
-            <Button
-              variant="outline"
-              size="sm"
-              className="w-full"
-              onClick={logout}
-            >
-              <LogOut className="mr-2 h-4 w-4" />
-              Sign out
-            </Button>
+            )}
           </div>
+
         </div>
       </div>
 

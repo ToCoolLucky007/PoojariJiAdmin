@@ -17,7 +17,7 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  
+
   const { login } = useAuth();
   const router = useRouter();
 
@@ -36,7 +36,10 @@ export default function LoginPage() {
     try {
       const success = await login(email, password);
       if (success) {
-        router.push('/dashboard');
+        const token = localStorage.getItem('authToken');
+
+        router.replace('/dashboard');
+
       } else {
         setError('Invalid email or password');
       }
@@ -62,7 +65,7 @@ export default function LoginPage() {
               Sign in to your admin account
             </CardDescription>
           </CardHeader>
-          
+
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
               {error && (
@@ -70,7 +73,7 @@ export default function LoginPage() {
                   <AlertDescription>{error}</AlertDescription>
                 </Alert>
               )}
-              
+
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
                 <div className="relative">
@@ -86,7 +89,7 @@ export default function LoginPage() {
                   />
                 </div>
               </div>
-              
+
               <div className="space-y-2">
                 <Label htmlFor="password">Password</Label>
                 <div className="relative">
@@ -115,18 +118,18 @@ export default function LoginPage() {
                   </Button>
                 </div>
               </div>
-              
+
               <div className="flex items-center justify-end">
-                <Link 
-                  href="/forgot-password" 
+                <Link
+                  href="/forgot-password"
                   className="text-sm text-blue-600 hover:text-blue-500 hover:underline"
                 >
                   Forgot password?
                 </Link>
               </div>
-              
-              <Button 
-                type="submit" 
+
+              <Button
+                type="submit"
                 className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg hover:shadow-xl transition-all duration-200"
                 disabled={isLoading}
               >
