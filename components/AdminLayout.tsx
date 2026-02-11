@@ -59,7 +59,7 @@ const navigation: NavigationItem[] = [
   {
     name: 'Consumer',
     icon: User,
-    roles: ['admin'],
+    roles: ['admin', 'user'],
     children: [
       { name: 'Detail', href: '/consumer-details', icon: Eye, roles: ['admin', 'user'] },
       { name: 'Refund', href: '/cancelled-orders', icon: RefreshCw, roles: ['admin', 'user'] },
@@ -68,7 +68,7 @@ const navigation: NavigationItem[] = [
   {
     name: 'Order',
     icon: ShoppingCart,
-    roles: ['admin'],
+    roles: ['admin', 'user'],
     children: [
       { name: 'Order', href: '/order-details', icon: Package, roles: ['admin', 'user'] },
     ]
