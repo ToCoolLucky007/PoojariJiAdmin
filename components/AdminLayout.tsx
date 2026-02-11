@@ -53,7 +53,7 @@ const navigation: NavigationItem[] = [
     children: [
       { name: 'Verification', href: '/consultant-verification', icon: UserCheck, roles: ['admin', 'user'], },
       { name: 'Detail', href: '/freelancer-details', icon: Eye, roles: ['admin', 'user'], },
-      { name: 'Withdrawal', href: '/withdrawal-requests', icon: Banknote, roles: ['admin'], },
+      { name: 'Withdrawal', href: '/withdrawal-requests', icon: Banknote, roles: ['admin', 'user'], },
     ]
   },
   {
