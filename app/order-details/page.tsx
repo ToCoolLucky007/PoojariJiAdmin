@@ -454,7 +454,7 @@ export default function OrderDetailsPage() {
                           </p>
                           <p className="text-sm text-gray-500">
                             <ShoppingBag className="w-3 h-3 inline mr-1" />
-                            {order.items.length} items
+                            {order?.items?.length ?? 0} items
                           </p>
                         </div>
                         <Badge variant="outline" className="text-xs mt-1">{order.category}</Badge>
@@ -569,10 +569,10 @@ export default function OrderDetailsPage() {
                   <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
                     <h4 className="font-medium text-gray-900 mb-4 flex items-center">
                       <ShoppingBag className="w-4 h-4 mr-2 text-blue-600" />
-                      Order Items ({selectedOrder.items.length} items)
+                      Order Items ({selectedOrder?.items?.length ?? 0} items)
                     </h4>
                     <div className="space-y-3">
-                      {selectedOrder.items.map((item, index) => (
+                      {selectedOrder?.items?.map((item, index) => (
                         <div key={index} className="bg-white p-4 rounded-lg border border-blue-100 shadow-sm">
                           <div className="flex items-center justify-between mb-2">
                             <div className="flex items-center space-x-3">
@@ -617,11 +617,24 @@ export default function OrderDetailsPage() {
                       <div className="flex justify-between items-center">
                         <span className="text-lg font-semibold text-gray-900">Order Total:</span>
                         <span className="text-2xl font-bold text-green-600">
-                          ₹{selectedOrder.items.reduce((total, item) => total + (item.price * item.quantity), 0).toFixed(2)}
+                          ₹{
+                            (
+                              selectedOrder?.items?.reduce(
+                                (total, item) =>
+                                  total + ((item?.price ?? 0) * (item?.quantity ?? 0)),
+                                0
+                              ) ?? 0
+                            ).toFixed(2)
+                          }
                         </span>
                       </div>
                       <div className="text-xs text-gray-500 mt-1">
-                        Total of {selectedOrder.items.reduce((total, item) => total + item.quantity, 0)} items
+                        Total of {
+                          selectedOrder?.items?.reduce(
+                            (total, item) => total + (item?.quantity ?? 0),
+                            0
+                          ) ?? 0
+                        } items
                       </div>
                     </div>
                   </div>

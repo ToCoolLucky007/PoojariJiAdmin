@@ -61,8 +61,8 @@ const navigation: NavigationItem[] = [
     icon: User,
     roles: ['admin'],
     children: [
-      { name: 'Detail', href: '/consumer-details', icon: Eye, roles: ['admin'] },
-      { name: 'Refund', href: '/cancelled-orders', icon: RefreshCw, roles: ['admin'] },
+      { name: 'Detail', href: '/consumer-details', icon: Eye, roles: ['admin', 'user'] },
+      { name: 'Refund', href: '/cancelled-orders', icon: RefreshCw, roles: ['admin', 'user'] },
     ]
   },
   {
@@ -70,14 +70,14 @@ const navigation: NavigationItem[] = [
     icon: ShoppingCart,
     roles: ['admin'],
     children: [
-      { name: 'Order', href: '/order-details', icon: Package, roles: ['admin'] },
+      { name: 'Order', href: '/order-details', icon: Package, roles: ['admin', 'user'] },
     ]
   },
   {
     name: 'Feedback',
     href: '/feedback',
     icon: MessageSquare,
-    roles: ['admin']
+    roles: ['admin', 'user']
   },
   {
     name: 'Master',
