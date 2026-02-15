@@ -47,7 +47,7 @@ const mockBusinesses: Business[] = [
   {
     id: '1',
     businessName: 'TechSolutions Pvt Ltd',
-    ownerName: 'Rajesh Kumar Verma',
+    ownerName: 'Rajesh Kumar Verma Ji',
     email: 'rajesh@techsolutions.com',
     phone: '+91-9876543210',
     address: '123 Tech Park, Bangalore, Karnataka, India',
