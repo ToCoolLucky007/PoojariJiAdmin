@@ -10,11 +10,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { 
-  Search, 
-  Eye, 
-  CheckCircle, 
-  XCircle, 
+import {
+  Search,
+  Eye,
+  CheckCircle,
+  XCircle,
   Clock,
   Building2,
   FileText,
@@ -47,7 +47,7 @@ const mockBusinesses: Business[] = [
   {
     id: '1',
     businessName: 'TechSolutions Pvt Ltd',
-    ownerName: 'Rajesh Kumar',
+    ownerName: 'Rajesh Kumar Verma',
     email: 'rajesh@techsolutions.com',
     phone: '+91-9876543210',
     address: '123 Tech Park, Bangalore, Karnataka, India',
@@ -147,12 +147,12 @@ export default function BusinessVerificationPage() {
     try {
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 2000));
-      
+
       const newStatus = action === 'approve' ? 'approved' : 'rejected';
-      
-      setBusinesses(prev => 
-        prev.map(business => 
-          business.id === businessId 
+
+      setBusinesses(prev =>
+        prev.map(business =>
+          business.id === businessId
             ? { ...business, status: newStatus as 'approved' | 'rejected' }
             : business
         )
@@ -329,7 +329,7 @@ export default function BusinessVerificationPage() {
                   Review the business information and documentation
                 </DialogDescription>
               </DialogHeader>
-              
+
               {selectedBusiness && (
                 <div className="space-y-6 max-h-[70vh] overflow-y-auto">
                   <div className="flex items-center space-x-4">
