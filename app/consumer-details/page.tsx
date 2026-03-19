@@ -118,56 +118,59 @@ export default function ConsumerDetailsPage() {
   const [customDateRange, setCustomDateRange] = useState<{ from?: Date; to?: Date }>({});
   const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
 
-  useEffect(() => {
-    const fetchConsumers = async () => {
-      try {
-        setIsLoading(true);
 
-        const token = localStorage.getItem('adminToken');
-        if (!token) {
-          console.warn('No admin token found');
-          return;
+  const fetchConsumers = async () => {
+    try {
+      setIsLoading(true);
+
+      const token = localStorage.getItem('adminToken');
+      if (!token) {
+        console.warn('No admin token found');
+        return;
+      }
+      const currentRange = getDateRangeForPeriod(selectedPeriod, customDateRange);
+
+      const startDate = new Date(currentRange.from).toISOString().split('T')[0];
+      const endDate = new Date(currentRange.to).toISOString().split('T')[0];
+      const response = await fetch(`${baseUrl}/api/admin/consumers?startdate=${startDate}&enddate=${endDate}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
         }
-        const [startDate, endDate] = [new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], new Date().toISOString().split('T')[0]];
-        const response = await fetch(`${baseUrl}/api/admin/consumers?startdate=${startDate}&enddate=${endDate}`, {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          }
-        });
+      });
 
-        const data = await response.json();
+      const data = await response.json();
 
-        if (response.ok && data.success && Array.isArray(data.data)) {
-          setConsumers(data.data);
+      if (response.ok && data.success && Array.isArray(data.data)) {
+        setConsumers(data.data);
 
-        } else {
-          console.error('Failed to fetch consultants:', data.message || 'Unknown error');
-          setConsumers([]);
-
-        }
-      } catch (error) {
-        console.error('Error fetching consultants:', error);
+      } else {
+        console.error('Failed to fetch consultants:', data.message || 'Unknown error');
         setConsumers([]);
 
-      } finally {
-        setIsLoading(false);
       }
-    };
+    } catch (error) {
+      console.error('Error fetching consultants:', error);
+      setConsumers([]);
+
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (selectedPeriod === 'custom' && (!customDateRange.from || !customDateRange.to)) {
+      return; // wait for full date selection
+    }
 
     fetchConsumers();
-  }, []);
+  }, [selectedPeriod, customDateRange.from, customDateRange.to]);
 
   // 🔥 FILTER DATA BY PERIOD AND OTHER CRITERIA - THIS IS WHERE THE MAGIC HAPPENS
   const filteredConsumers = useMemo(() => {
     let filtered = consumers;
 
-    // 🔥 FILTER BY DATE PERIOD - FILTERS CONSUMERS BY THEIR JOIN DATE
-    const dateRange = getDateRangeForPeriod(selectedPeriod, customDateRange);
-    filtered = filterDataByDateRange(filtered, 'joinedDate', dateRange);
-
-    // Filter by search term
     if (searchTerm) {
       filtered = filtered.filter(consumer =>
         consumer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -175,14 +178,12 @@ export default function ConsumerDetailsPage() {
       );
     }
 
-    // Filter by status
     if (statusFilter !== 'all') {
       filtered = filtered.filter(consumer => consumer.status === statusFilter);
     }
 
     return filtered;
-  }, [consumers, selectedPeriod, customDateRange, searchTerm, statusFilter]);
-
+  }, [consumers, searchTerm, statusFilter]);
   // 🔥 CALCULATE PERIOD COMPARISON - COMPARES CURRENT VS PREVIOUS PERIOD
   const periodComparison = useMemo(() => {
     const currentRange = getDateRangeForPeriod(selectedPeriod, customDateRange);
@@ -259,7 +260,10 @@ export default function ConsumerDetailsPage() {
           {/* 🔥 PERIOD FILTER COMPONENT - THIS IS THE UI FOR SELECTING TIME PERIODS */}
           <PeriodFilter
             selectedPeriod={selectedPeriod}
-            onPeriodChange={setSelectedPeriod}
+            onPeriodChange={(period) => {
+              setSelectedPeriod(period);
+              setSearchTerm(''); // ✅ clear search text
+            }}
             customDateRange={customDateRange}
             onCustomDateRangeChange={(from, to) => setCustomDateRange({ from, to })}
             showComparison={false}

@@ -308,7 +308,7 @@ export default function FreelancerDetailsPage() {
   };
   useEffect(() => {
     fetchFreelancers();
-  }, []);
+  }, [selectedPeriod, customDateRange]);
 
   // Filter data by period and other criteria
   const filteredFreelancers = useMemo(() => {
@@ -448,7 +448,10 @@ export default function FreelancerDetailsPage() {
           {/* Period Filter */}
           <PeriodFilter
             selectedPeriod={selectedPeriod}
-            onPeriodChange={setSelectedPeriod}
+            onPeriodChange={(period) => {
+              setSelectedPeriod(period);
+              setSearchTerm(''); // ✅ clear name filter
+            }}
             customDateRange={customDateRange}
             onCustomDateRangeChange={(from, to) => setCustomDateRange({ from, to })}
             showComparison={false}
