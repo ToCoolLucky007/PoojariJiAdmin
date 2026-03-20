@@ -371,7 +371,7 @@ export default function OrderDetailsPage() {
                         <div className="flex items-center space-x-4 mt-1">
                           <p className="text-sm text-gray-500">
                             <Calendar className="w-3 h-3 inline mr-1" />
-                            Ordered: {new Date(order.orderDate).toLocaleDateString()}
+                            Ordered: {order.orderDate}
                           </p>
                           <p className="text-sm font-medium text-green-600">
                             <IndianRupee className="w-3 h-3 inline mr-1" />
@@ -471,11 +471,11 @@ export default function OrderDetailsPage() {
                         </div>
                         <div className="flex justify-between">
                           <span className="text-gray-500">Order Date:</span>
-                          <span>{new Date(selectedOrder.orderDate).toLocaleDateString()}</span>
+                          <span>{selectedOrder.orderDate}</span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-gray-500">Delivery Date:</span>
-                          <span>{new Date(selectedOrder.deliveryDate).toLocaleDateString()}</span>
+                          <span>{selectedOrder.deliveryDate}</span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-gray-500">Payment Status:</span>
