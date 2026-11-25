@@ -1,0 +1,234 @@
+
+name: PoojariJiAdmin Build and Deploy
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: PoojariJiAdmin-production-deployment
+  cancel-in-progress: false
+
+jobs:
+  # ==========================================
+  # JOB 1: BUILD NEXT.JS APPLICATION
+  # ==========================================
+  build:
+    name: Build Next.js Application
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Build Application
+        run: npm run build
+
+      - name: Prepare Standalone Package
+        run: |
+          set -e
+
+          rm -rf release
+          mkdir -p release/.next
+
+          test -d .next/standalone
+          test -d .next/static
+          test -f .next/BUILD_ID
+
+          cp -a .next/standalone/. release/
+          cp -a .next/static release/.next/static
+
+          # Public assets are maintained separately on EC2.
+          rm -rf release/public
+
+          test -f release/server.js
+          test -f release/package.json
+          test -f release/.next/BUILD_ID
+          test -d release/node_modules
+          test -d release/.next/static
+
+          echo "Standalone package prepared successfully"
+          ls -lah release/
+          ls -lah release/.next/
+
+      - name: Upload Production Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: PoojariJiAdmin-production
+          path: release/
+          include-hidden-files: true
+          retention-days: 7
+
+  # ==========================================
+  # JOB 2: TRANSFER BUILD TO EC2
+  # ==========================================
+  transfer:
+    name: Transfer Build to EC2
+    runs-on: ubuntu-latest
+    needs: build
+
+    steps:
+      - name: Download Production Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: PoojariJiAdmin-production
+          path: artifact
+
+      - name: Verify Production Artifact
+        run: |
+          set -e
+
+          test -f artifact/server.js
+          test -f artifact/package.json
+          test -f artifact/.next/BUILD_ID
+          test -d artifact/node_modules
+          test -d artifact/.next/static
+
+          echo "Artifact verification successful"
+          ls -lah artifact/
+          ls -lah artifact/.next/
+
+      - name: Create Deployment Package
+        run: |
+          set -e
+
+          tar -czf PoojariJiAdmin-production.tar.gz -C artifact .
+          ls -lh PoojariJiAdmin-production.tar.gz
+
+      - name: Configure SSH
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.EC2_SSH_KEY }}
+          SSH_KNOWN_HOSTS: ${{ secrets.EC2_KNOWN_HOSTS }}
+        run: |
+          set -e
+
+          test -n "$SSH_PRIVATE_KEY"
+          test -n "$SSH_KNOWN_HOSTS"
+
+          mkdir -p "$HOME/.ssh"
+          chmod 700 "$HOME/.ssh"
+
+          printf '%s\n' "$SSH_PRIVATE_KEY" > "$HOME/.ssh/id_ed25519"
+          chmod 600 "$HOME/.ssh/id_ed25519"
+
+          printf '%s\n' "$SSH_KNOWN_HOSTS" > "$HOME/.ssh/known_hosts"
+          chmod 600 "$HOME/.ssh/known_hosts"
+
+      - name: Transfer and Prepare Release
+        env:
+          EC2_HOST: ${{ secrets.EC2_HOST }}
+          EC2_USER: ${{ secrets.EC2_USER }}
+          EC2_PORT: ${{ secrets.EC2_PORT }}
+          RELEASE_ID: ${{ github.sha }}
+          RUN_ID: ${{ github.run_id }}
+          RUN_ATTEMPT: ${{ github.run_attempt }}
+
+        run: |
+          set -euo pipefail
+
+          EC2_PORT="${EC2_PORT:-22}"
+
+          RELEASE_NAME="release-${RELEASE_ID:0:7}-${RUN_ID}-${RUN_ATTEMPT}"
+          REMOTE_DIR="/var/www/PoojariJiAdmin/releases/${RELEASE_NAME}"
+          REMOTE_ARCHIVE="/tmp/PoojariJiAdmin-${RUN_ID}-${RUN_ATTEMPT}.tar.gz"
+          SHARED_DIR="/var/www/PoojariJiAdmin/shared"
+
+          SSH_OPTS=(
+            -i "$HOME/.ssh/id_ed25519"
+            -p "$EC2_PORT"
+            -o StrictHostKeyChecking=yes
+            -o IdentitiesOnly=yes
+          )
+
+          echo "Release: $RELEASE_NAME"
+          echo "Target: $REMOTE_DIR"
+
+          ssh "${SSH_OPTS[@]}" "$EC2_USER@$EC2_HOST" \
+            "mkdir -p '$REMOTE_DIR'"
+
+          scp \
+            -i "$HOME/.ssh/id_ed25519" \
+            -P "$EC2_PORT" \
+            -o StrictHostKeyChecking=yes \
+            -o IdentitiesOnly=yes \
+            PoojariJiAdmin-production.tar.gz \
+            "$EC2_USER@$EC2_HOST:$REMOTE_ARCHIVE"
+
+          echo "Archive transferred successfully"
+
+          ssh "${SSH_OPTS[@]}" "$EC2_USER@$EC2_HOST" \
+            bash -s -- "$REMOTE_DIR" "$REMOTE_ARCHIVE" "$SHARED_DIR" <<'REMOTE'
+          set -euo pipefail
+
+          RELEASE_DIR="$1"
+          ARCHIVE="$2"
+          SHARED_DIR="$3"
+
+          tar -xzf "$ARCHIVE" -C "$RELEASE_DIR"
+          rm -f "$ARCHIVE"
+
+          test -f "$RELEASE_DIR/server.js"
+          test -f "$RELEASE_DIR/package.json"
+          test -f "$RELEASE_DIR/.next/BUILD_ID"
+          test -d "$RELEASE_DIR/.next/static"
+          test -d "$RELEASE_DIR/node_modules"
+
+          test -f "$SHARED_DIR/.env.production"
+          test -d "$SHARED_DIR/public"
+
+          ln -sfn "$SHARED_DIR/.env.production" "$RELEASE_DIR/.env.production"
+
+          rm -rf "$RELEASE_DIR/public"
+          ln -sfn "$SHARED_DIR/public" "$RELEASE_DIR/public"
+
+          test -f "$RELEASE_DIR/.env.production"
+          test -d "$RELEASE_DIR/public"
+
+          echo "Release preparation successful"
+          echo "Next.js BUILD_ID:"
+          cat "$RELEASE_DIR/.next/BUILD_ID"
+
+          echo "Environment link:"
+          readlink -f "$RELEASE_DIR/.env.production"
+
+          echo "Public directory link:"
+          readlink -f "$RELEASE_DIR/public"
+
+          echo "Release directory:"
+          ls -lah "$RELEASE_DIR"
+          REMOTE
+
+          echo "Build successfully transferred and prepared on EC2"
+
+      - name: Transfer Summary
+        env:
+          RELEASE_ID: ${{ github.sha }}
+          RUN_ID: ${{ github.run_id }}
+          RUN_ATTEMPT: ${{ github.run_attempt }}
+        run: |
+          echo "======================================"
+          echo "PoojariJiAdmin BUILD TRANSFER SUCCESSFUL"
+          echo "======================================"
+          echo "Commit: $RELEASE_ID"
+          echo "Run ID: $RUN_ID"
+          echo "Release: release-${RELEASE_ID:0:7}-${RUN_ID}-${RUN_ATTEMPT}"
+          echo "Target: /var/www/PoojariJiAdmin/releases/"
+          echo "Environment: SHARED"
+          echo "Public images: SHARED"
+          echo "PM2 restart: NOT PERFORMED"
+          echo "Live application: UNCHANGED"
+          echo "======================================"
+
+ 
