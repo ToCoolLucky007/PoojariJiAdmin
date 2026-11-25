@@ -27,7 +27,7 @@ import {
   Scale
 } from 'lucide-react';
 import { TimePeriod, getDateRangeForPeriod, filterDataByDateRange, calculatePeriodComparison } from '@/lib/date-utils';
-
+//LM
 interface OrderItem {
   price: number;
   itemid: number;
