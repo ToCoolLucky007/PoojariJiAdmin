@@ -6,7 +6,7 @@ import { AuthProvider } from '@/contexts/AuthContext';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'Admin Portal - Dashboar-lalit',
+  title: 'Admin Portal - Dashboard',
   description: 'Admin portal for managing consultants, businesses, and orders',
 };
 
