@@ -34,3 +34,15 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+# Environment files
+.env*
+!.env.example
+
+# Deployment SSH keys
+poojariji_deploy_key
+poojariji_deploy_key.pub
+
+# EC2 deployment directories
+/releases/
+/current
+/shared/
