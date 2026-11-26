@@ -1,5 +1,5 @@
 'use client';
-
+import { Loader2 } from 'lucide-react';
 import { useState, useEffect, useMemo } from 'react';
 import AdminLayout from '@/components/AdminLayout';
 import ProtectedRoute from '@/components/ProtectedRoute';
@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Download, FileText } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import {
   Search,
@@ -40,6 +41,7 @@ interface OrderItem {
 interface Order {
   id: string;
   orderId: string;
+  invoiceUrl: string | null;
   customerName: string;
   customerEmail: string;
   customerAddress: String;
@@ -154,6 +156,65 @@ export default function OrderDetailsPage() {
 
     return filtered;
   }, [orders, selectedPeriod, customDateRange, searchTerm, statusFilter]);
+
+
+
+
+  const [isGenerating, setIsGenerating] = useState(false);
+  const handleGenerateInvoice = async (orderid: string) => {
+    try {
+      setIsGenerating(true);
+      const token = localStorage.getItem("adminToken");
+      if (!token) return;
+
+      const response = await fetch(
+        `${baseUrl}/api/admin/order/${orderid}/invoice`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to generate invoice");
+      }
+
+      const result = await response.json();
+
+      if (result.success && result.data?.url) {
+        const invoiceUrl = result.data.url;
+
+        // Update original orders state
+        setOrders((prevOrders) =>
+          prevOrders.map((order) =>
+            String(order.orderId) === String(orderid)
+              ? { ...order, invoiceUrl: invoiceUrl }
+              : order
+          )
+        );
+
+        // Open generated PDF
+        window.open(
+          invoiceUrl,
+          "_blank",
+          "noopener,noreferrer"
+        );
+
+      } else {
+        throw new Error("Invoice URL not returned by API");
+      }
+
+    } catch (error) {
+      console.error("Invoice generation error:", error);
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+
 
   // 🔥 CALCULATE PERIOD COMPARISON - COMPARES CURRENT VS PREVIOUS PERIOD
   const periodComparison = useMemo(() => {
@@ -354,40 +415,62 @@ export default function OrderDetailsPage() {
             </CardContent>
           </Card>
 
+
           <div className="grid gap-4">
             {filteredOrders.map((order) => (
-              <Card key={order.id} className="bg-white/80 backdrop-blur-xl border-0 shadow-xl hover:shadow-2xl transition-all duration-300">
+              <Card
+                key={order.id}
+                className="bg-white/80 backdrop-blur-xl border-0 shadow-xl hover:shadow-2xl transition-all duration-300"
+              >
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-4">
                       <div className="w-16 h-16 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
                         <ShoppingCart className="h-8 w-8 text-white" />
                       </div>
+
                       <div>
-                        <h3 className="text-lg font-semibold text-gray-900">{order.orderId}</h3>
-                        <p className="text-sm text-gray-600">{order.serviceName}</p>
-                        <p className="text-sm text-gray-500">Customer: {order.customerName}</p>
-                        <p className="text-sm text-gray-500">Freelancer: {order.freelancerName}</p>
+                        <h3 className="text-lg font-semibold text-gray-900">
+                          {order.orderId}
+                        </h3>
+
+                        <p className="text-sm text-gray-600">
+                          {order.serviceName}
+                        </p>
+
+                        <p className="text-sm text-gray-500">
+                          Customer: {order.customerName}
+                        </p>
+
+                        <p className="text-sm text-gray-500">
+                          Freelancer: {order.freelancerName}
+                        </p>
+
                         <div className="flex items-center space-x-4 mt-1">
                           <p className="text-sm text-gray-500">
                             <Calendar className="w-3 h-3 inline mr-1" />
                             Ordered: {order.orderDate}
                           </p>
+
                           <p className="text-sm font-medium text-green-600">
                             <IndianRupee className="w-3 h-3 inline mr-1" />
                             ₹{order.orderAmount.toLocaleString()}
                           </p>
+
                           <p className="text-sm text-gray-500">
                             <ShoppingBag className="w-3 h-3 inline mr-1" />
                             {order?.items?.length ?? 0} items
                           </p>
                         </div>
-                        <Badge variant="outline" className="text-xs mt-1">{order.category}</Badge>
+
+                        <Badge variant="outline" className="text-xs mt-1">
+                          {order.category}
+                        </Badge>
                       </div>
                     </div>
+
                     <div className="flex items-center space-x-3">
                       <div className="text-right">
-
                         {/* Order Status */}
                         {getStatusBadge(order.status)}
 
@@ -396,35 +479,78 @@ export default function OrderDetailsPage() {
                           {getPaymentStatusBadge(order.paymentStatus)}
                         </div>
 
-                        {/* 🔥 System Cancel Status */}
+                        {/* System Cancel Status */}
                         <div className="mt-1">
-                          {order.iscancelled === 'Cancelled' ? (
+                          {order.iscancelled === "Cancelled" ? (
                             <Badge className="bg-red-100 text-red-700 hover:bg-red-100">
                               Cancelled
                             </Badge>
                           ) : (
                             <Badge variant="outline">
-                              {order.iscancelled || 'Active'}
+                              {order.iscancelled || "Active"}
                             </Badge>
                           )}
                         </div>
-
                       </div>
 
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setSelectedOrder(order)}
-                      >
-                        <Eye className="w-4 h-4 mr-2" />
-                        View Details
-                      </Button>
+                      <div className="flex flex-col gap-2">
+                        {/* View Details */}
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setSelectedOrder(order)}
+                        >
+                          <Eye className="w-4 h-4 mr-2" />
+                          View Details
+                        </Button>
+
+                        {/* Invoice Actions - Only for Paid Orders */}
+
+
+                        {order.paymentStatus === "paid" && (
+                          order.invoiceUrl ? (
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              title="Download Invoice PDF"
+                              onClick={() =>
+                                window.open(
+                                  order.invoiceUrl,
+                                  "_blank",
+                                  "noopener,noreferrer"
+                                )
+                              }
+                            >
+                              <FileText className="w-5 h-5 text-red-600" />
+                            </Button>
+                          ) : (
+                            <Button
+                              disabled={isGenerating}
+                              variant="default"
+                              size="sm"
+                              onClick={() => handleGenerateInvoice(order.orderId)}
+                            >
+                              {isGenerating ? (
+                                <>
+                                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                  Generating Invoice...
+                                </>
+                              ) : (
+                                'Generate Invoice'
+                              )}
+                            </Button>
+                          )
+                        )}
+
+
+                      </div>
                     </div>
                   </div>
                 </CardContent>
               </Card>
             ))}
           </div>
+
 
           {filteredOrders.length === 0 && (
             <Card className="bg-white/80 backdrop-blur-xl border-0 shadow-xl">
