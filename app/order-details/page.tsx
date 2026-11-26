@@ -513,13 +513,15 @@ export default function OrderDetailsPage() {
                               variant="outline"
                               size="icon"
                               title="Download Invoice PDF"
-                              onClick={() =>
-                                window.open(
-                                  order.invoiceUrl,
-                                  "_blank",
-                                  "noopener,noreferrer"
-                                )
-                              }
+                              onClick={() => {
+                                if (order.invoiceUrl) {
+                                  window.open(
+                                    order.invoiceUrl,
+                                    "_blank",
+                                    "noopener,noreferrer"
+                                  );
+                                }
+                              }}
                             >
                               <FileText className="w-5 h-5 text-red-600" />
                             </Button>
